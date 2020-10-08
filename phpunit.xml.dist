@@ -22,6 +22,7 @@
         <directory>app/tests</directory>
         <directory>vendor/silverstripe/cms/tests/php</directory>
         <directory>vendor/silverstripe/framework/tests/php</directory>
+        <directory>dnadesign/silverstripe-elemental/tests</directory>
     </testsuite>
 
     <!-- framework only -->
@@ -44,5 +45,10 @@
         <directory>vendor/silverstripe/graphql/tests/</directory>
         <directory>vendor/silverstripe/reports/tests/</directory>
         <directory>vendor/silverstripe/siteconfig/tests/php/</directory>
+    </testsuite>
+
+    <!-- elemental components -->
+    <testsuite name="elemental">
+        <directory>vendor/dnadesign/silverstripe-elemental/tests/</directory>
     </testsuite>
 </phpunit>

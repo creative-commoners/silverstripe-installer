@@ -50,10 +50,8 @@ matrix:
       env: DB=MYSQL BEHAT_TEST="@cms"
     - php: 7.3
       env: DB=MYSQL BEHAT_TEST="@asset-admin"
-    - php: 7.3
-      env: DB=PGSQL HEALTH_TEST=1
     - php: 7.4
-      env: DB=MYSQL HEALTH_TEST=1 PDO=1
+      env: DB=MYSQL BEHAT_TEST="@silverstripe-elemental"
 
 before_script:
 # Extra $PATH
@@ -72,13 +70,13 @@ before_script:
 # Install composer dependencies
   - composer validate
   # Fix for running phpunit 5 on php 7.4+
-  - composer require --no-update sminnee/phpunit-mock-objects:^3
-  - if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:^2; fi
-  - if [[ $BEHAT_TEST ]]; then composer require --no-update silverstripe/recipe-testing:^1; fi;
-  - if [[ $BEHAT_TEST == "@asset-admin" ]]; then composer require --no-update silverstripe/frameworktest:^0.1.0; fi;
-  - if [[ $HEALTH_TEST ]]; then composer require --no-update silverstripe/serve:^2; fi;
-  - if ! [[ $HEALTH_TEST ]]; then composer install --prefer-source --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile; fi;
-  - if [[ $HEALTH_TEST ]]; then composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile --no-dev; fi;
+  #- composer require --no-update sminnee/phpunit-mock-objects:^3
+  #- if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:^2; fi
+  #- if [[ $BEHAT_TEST ]]; then composer require --no-update silverstripe/recipe-testing:^1; fi;
+  #- if [[ $BEHAT_TEST == "@asset-admin" ]]; then composer require --no-update silverstripe/frameworktest:^0.1.0; fi;
+  #- if [[ $HEALTH_TEST ]]; then composer require --no-update silverstripe/serve:^2; fi;
+  - composer install --prefer-source --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
+  #- if [[ $HEALTH_TEST ]]; then composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile --no-dev; fi;
 
 # Start behat services
   - if [[ $BEHAT_TEST ]] || [[ $HEALTH_TEST ]]; then mkdir artifacts; fi
@@ -89,8 +87,8 @@ before_script:
 script:
   - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit --testsuite $PHPUNIT_TEST; fi
   - if [[ $BEHAT_TEST ]]; then vendor/bin/behat $BEHAT_TEST; fi
-  - if [[ $HEALTH_TEST ]]; then curl -vfL http://localhost:8080/dev/build?flush; fi
-  - if [[ $HEALTH_TEST ]]; then curl -vfL http://localhost:8080/admin; fi
+  #- if [[ $HEALTH_TEST ]]; then curl -vfL http://localhost:8080/dev/build?flush; fi
+  #- if [[ $HEALTH_TEST ]]; then curl -vfL http://localhost:8080/admin; fi
 
 after_failure:
   - if [[ $BEHAT_TEST ]] || [[ $HEALTH_TEST ]]; then php ./vendor/silverstripe/framework/tests/behat/travis-upload-artifacts.php --if-env ARTIFACTS_BUCKET,ARTIFACTS_KEY,ARTIFACTS_SECRET --target-path $TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID --artifacts-base-url https://s3.amazonaws.com/$ARTIFACTS_BUCKET/ --artifacts-path ./artifacts/; fi
