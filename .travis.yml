@@ -33,7 +33,8 @@ matrix:
     - php: 7.2
       env: DB=MYSQL PHPUNIT_TEST=framework
     - php: 7.3
-      env: DB=PGSQL PHPUNIT_TEST=core
+      env: DB=MYSQL PHPUNIT_TEST=core
+    #  env: DB=PGSQL PHPUNIT_TEST=core <<<- POSTGRES was triggering a weird out of space issue https://travis-ci.org/github/creative-commoners/silverstripe-installer/jobs/733873929
     - php: 7.4
       env: DB=MYSQL PHPUNIT_TEST=core
     # admin php tests
