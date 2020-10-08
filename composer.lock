@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a9f65f86ec5298554c28fc38fd0feb6",
+    "content-hash": "cc11686e7c7aacbb4f6f08ec8b28c7a9",
     "packages": [
         {
             "name": "behat/behat",
@@ -3676,16 +3676,16 @@
         },
         {
             "name": "silverstripe/graphql",
-            "version": "3.3.x-dev",
+            "version": "dev-patch-1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/silverstripe/silverstripe-graphql.git",
-                "reference": "93fe8d3675b0e2dfc374b3cab284f4f481dc3c14"
+                "url": "git@github.com:mleutenegger/silverstripe-graphql.git",
+                "reference": "f0b4fa9f8ec3c6cc657de1f01d961c55a40f5e16"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/silverstripe-graphql/zipball/93fe8d3675b0e2dfc374b3cab284f4f481dc3c14",
-                "reference": "93fe8d3675b0e2dfc374b3cab284f4f481dc3c14",
+                "url": "https://api.github.com/repos/mleutenegger/silverstripe-graphql/zipball/f0b4fa9f8ec3c6cc657de1f01d961c55a40f5e16",
+                "reference": "f0b4fa9f8ec3c6cc657de1f01d961c55a40f5e16",
                 "shasum": ""
             },
             "require": {
@@ -3709,12 +3709,19 @@
                     "SilverStripe\\GraphQL\\Tests\\": "tests/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "lint": [
+                    "vendor/bin/phpcs src/ tests/"
+                ],
+                "lint-clean": [
+                    "vendor/bin/phpcbf src/ tests/"
+                ]
+            },
             "license": [
                 "BSD-3-Clause"
             ],
             "description": "GraphQL server for SilverStripe models and other data",
-            "time": "2020-10-07T03:49:47+00:00"
+            "time": "2020-10-07T17:33:15+00:00"
         },
         {
             "name": "silverstripe/login-forms",
@@ -6116,11 +6123,19 @@
         }
     ],
     "packages-dev": [],
-    "aliases": [],
+    "aliases": [
+        {
+            "alias": "3.3.x-dev",
+            "alias_normalized": "3.3.9999999.9999999-dev",
+            "version": "dev-patch-1",
+            "package": "silverstripe/graphql"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "silverstripe/recipe-cms": 20,
-        "silverstripe/recipe-content-blocks": 20
+        "silverstripe/recipe-content-blocks": 20,
+        "silverstripe/graphql": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

@@ -14,12 +14,14 @@
         "silverstripe/postgresql": "^2",
         
         "silverstripe/recipe-cms": "4.6.x-dev",
-        "silverstripe/recipe-content-blocks": "2.6.x-dev"
+        "silverstripe/recipe-content-blocks": "2.6.x-dev",
+        
+        "silverstripe/graphql": "dev-patch-1 as 3.3.x-dev"
     },
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:creative-commoners/silverstripe-crazy-egg.git",
+            "url": "git@github.com:mleutenegger/silverstripe-graphql.git",
             "no-api": true
         }
     ],
