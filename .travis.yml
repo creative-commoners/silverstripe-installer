@@ -28,31 +28,35 @@ matrix:
   fast_finish: true
   include:
     # Core php tests
-    - php: 7.1
-      env: DB=MYSQL PHPUNIT_TEST=core PDO=1
-    - php: 7.2
-      env: DB=MYSQL PHPUNIT_TEST=framework
-    - php: 7.3
-      env: DB=MYSQL PHPUNIT_TEST=core
-    #  env: DB=PGSQL PHPUNIT_TEST=core <<<- POSTGRES was triggering a weird out of space issue https://travis-ci.org/github/creative-commoners/silverstripe-installer/jobs/733873929
-    - php: 7.4
-      env: DB=MYSQL PHPUNIT_TEST=core
-    # admin php tests
-    - php: 7.1
-      env: DB=MYSQL PHPUNIT_TEST=admin PDO=1
-    - php: 7.2
-      env: DB=PGSQL PHPUNIT_TEST=admin
-    - php: 7.4
-      env: DB=MYSQL PHPUNIT_TEST=admin
+    # - php: 7.1
+    #   env: DB=MYSQL PHPUNIT_TEST=core PDO=1
+    # - php: 7.2
+    #   env: DB=MYSQL PHPUNIT_TEST=framework
+    # - php: 7.3
+    #   env: DB=MYSQL PHPUNIT_TEST=core
+    # #  env: DB=PGSQL PHPUNIT_TEST=core <<<- POSTGRES was triggering a weird out of space issue https://travis-ci.org/github/creative-commoners/silverstripe-installer/jobs/733873929
+    # - php: 7.4
+    #   env: DB=MYSQL PHPUNIT_TEST=core
+    # # admin php tests
+    # - php: 7.1
+    #   env: DB=MYSQL PHPUNIT_TEST=admin PDO=1
+    # - php: 7.2
+    #   env: DB=PGSQL PHPUNIT_TEST=admin
+    # - php: 7.4
+    #   env: DB=MYSQL PHPUNIT_TEST=admin
     # behat tests
-    - php: 7.1
-      env: DB=MYSQL BEHAT_TEST="@framework"
-    - php: 7.2
-      env: DB=MYSQL BEHAT_TEST="@cms"
-    - php: 7.3
-      env: DB=MYSQL BEHAT_TEST="@asset-admin"
-    - php: 7.4
-      env: DB=MYSQL BEHAT_TEST="@silverstripe-elemental"
+    - php: nightly
+      env: DB=MYSQL COMPOSER_ARG=--ignore-platform-reqs BEHAT_TEST="@framework"
+    - php: nightly
+      env: DB=MYSQL COMPOSER_ARG=--ignore-platform-reqs BEHAT_TEST="@cms"
+    - php: nightly
+      env: DB=MYSQL COMPOSER_ARG=--ignore-platform-reqs BEHAT_TEST="@asset-admin"
+    - php: nightly
+      env: DB=MYSQL COMPOSER_ARG=--ignore-platform-reqs BEHAT_TEST="@silverstripe-elemental"
+    # TODO: see if @framework is limited to just the framework module (which shouldn't have behat tests...)  
+    # TODO: behat tests in: campaign-admin, elemental-banner-block, siteconfig, versioned-admin
+    # 
+    # TODO: run composer install
 
 before_script:
 # Extra $PATH
@@ -76,7 +80,7 @@ before_script:
   #- if [[ $BEHAT_TEST ]]; then composer require --no-update silverstripe/recipe-testing:^1; fi;
   #- if [[ $BEHAT_TEST == "@asset-admin" ]]; then composer require --no-update silverstripe/frameworktest:^0.1.0; fi;
   #- if [[ $HEALTH_TEST ]]; then composer require --no-update silverstripe/serve:^2; fi;
-  - composer install --prefer-source --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
+  - composer install --prefer-source --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile $COMPOSER_ARG
   #- if [[ $HEALTH_TEST ]]; then composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile --no-dev; fi;
 
 # Start behat services
