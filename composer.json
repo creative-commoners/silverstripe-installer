@@ -12,16 +12,14 @@
         "silverstripe/frameworktest": "^0.1.0",
         "silverstripe/registry": "^2",
         "silverstripe/postgresql": "^2",
-        
         "silverstripe/recipe-cms": "4.6.x-dev",
         "silverstripe/recipe-content-blocks": "2.6.x-dev",
-        
-        "silverstripe/graphql": "dev-patch-1 as 3.3.x-dev"
+        "silverstripe/admin": "dev-pulls/1.6/entwine-one-patch as 1.6.x-dev"
     },
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:mleutenegger/silverstripe-graphql.git",
+            "url": "git@github.com:creative-commoners/silverstripe-admin.git",
             "no-api": true
         }
     ],
