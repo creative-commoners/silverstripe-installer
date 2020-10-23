@@ -27,32 +27,30 @@ env:
 matrix:
   fast_finish: true
   include:
-    # Core php tests
+    # phpunit tests
     - php: 7.1
       env: DB=MYSQL PHPUNIT_TEST=core PDO=1
-    - php: 7.2
-      env: DB=MYSQL PHPUNIT_TEST=framework
     - php: 7.3
-      env: DB=MYSQL PHPUNIT_TEST=core
-    #  env: DB=PGSQL PHPUNIT_TEST=core <<<- POSTGRES was triggering a weird out of space issue https://travis-ci.org/github/creative-commoners/silverstripe-installer/jobs/733873929
-    - php: 7.4
-      env: DB=MYSQL PHPUNIT_TEST=core
-    # admin php tests
-    - php: 7.1
-      env: DB=MYSQL PHPUNIT_TEST=admin PDO=1
-    - php: 7.2
-      env: DB=PGSQL PHPUNIT_TEST=admin
+      env: DB=MYSQL PHPUNIT_TEST=framework
     - php: 7.4
       env: DB=MYSQL PHPUNIT_TEST=admin
     # behat tests
     - php: 7.1
-      env: DB=MYSQL BEHAT_TEST="@framework"
+      env: DB=MYSQL BEHAT_TEST="@admin"
+    - php: 7.1
+      env: DB=MYSQL BEHAT_TEST="@asset-admin"
+    - php: 7.2
+      env: DB=MYSQL BEHAT_TEST="@campaign-admin"
     - php: 7.2
       env: DB=MYSQL BEHAT_TEST="@cms"
     - php: 7.3
-      env: DB=MYSQL BEHAT_TEST="@asset-admin"
+      env: DB=MYSQL BEHAT_TEST="@elemental-bannerblock"
+    - php: 7.3
+      env: DB=MYSQL BEHAT_TEST="@siteconfig"
     - php: 7.4
       env: DB=MYSQL BEHAT_TEST="@silverstripe-elemental"
+    - php: 7.4
+      env: DB=MYSQL BEHAT_TEST="@versioned-admin"
 
 before_script:
 # Extra $PATH
@@ -70,32 +68,24 @@ before_script:
 
 # Install composer dependencies
   - composer validate
+  - composer require --no-update silverstripe/recipe-testing:^1
   # Fix for running phpunit 5 on php 7.4+
-  #- composer require --no-update sminnee/phpunit-mock-objects:^3
-  #- if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:^2; fi
-  #- if [[ $BEHAT_TEST ]]; then composer require --no-update silverstripe/recipe-testing:^1; fi;
-  #- if [[ $BEHAT_TEST == "@asset-admin" ]]; then composer require --no-update silverstripe/frameworktest:^0.1.0; fi;
-  #- if [[ $HEALTH_TEST ]]; then composer require --no-update silverstripe/serve:^2; fi;
+  - composer require --no-update sminnee/phpunit-mock-objects:^3
+  - if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:^2; fi
+  - if [[ $BEHAT_TEST == "@asset-admin" ]]; then composer require --no-update silverstripe/frameworktest:0.1.0; fi;
+  # For testing pull-request branches, this needs to be `composer install` and not `composer update`
+  # so that we use a composer.lock file that was created on a local environemnt
   - composer install --prefer-source --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
-  #- if [[ $HEALTH_TEST ]]; then composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile --no-dev; fi;
 
 # Start behat services
-  - if [[ $BEHAT_TEST ]] || [[ $HEALTH_TEST ]]; then mkdir artifacts; fi
-  - if [[ $BEHAT_TEST ]] || [[ $HEALTH_TEST ]]; then cp composer.lock artifacts/; fi
+  - if [[ $BEHAT_TEST ]]; then mkdir artifacts; fi
+  - if [[ $BEHAT_TEST ]]; then cp composer.lock artifacts/; fi
   - if [[ $BEHAT_TEST ]]; then (chromedriver > artifacts/chromedriver.log 2>&1 &); fi
-  - if [[ $BEHAT_TEST ]] || [[ $HEALTH_TEST ]]; then (vendor/bin/serve --bootstrap-file vendor/silverstripe/cms/tests/behat/serve-bootstrap.php &> artifacts/serve.log &); sleep 3; fi
+  - if [[ $BEHAT_TEST ]]; then (vendor/bin/serve --bootstrap-file vendor/silverstripe/cms/tests/behat/serve-bootstrap.php &> artifacts/serve.log &); sleep 3; fi
 
 script:
   - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit --testsuite $PHPUNIT_TEST; fi
   - if [[ $BEHAT_TEST ]]; then vendor/bin/behat $BEHAT_TEST; fi
-  #- if [[ $HEALTH_TEST ]]; then curl -vfL http://localhost:8080/dev/build?flush; fi
-  #- if [[ $HEALTH_TEST ]]; then curl -vfL http://localhost:8080/admin; fi
 
 after_failure:
-  - if [[ $BEHAT_TEST ]] || [[ $HEALTH_TEST ]]; then php ./vendor/silverstripe/framework/tests/behat/travis-upload-artifacts.php --if-env ARTIFACTS_BUCKET,ARTIFACTS_KEY,ARTIFACTS_SECRET --target-path $TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID --artifacts-base-url https://s3.amazonaws.com/$ARTIFACTS_BUCKET/ --artifacts-path ./artifacts/; fi
-
-notifications:
-  slack:
-    on_pull_requests: false
-    rooms:
-      secure: pr4kG5tTMqZy1DLejHd1MpPulAE7FtRvTYekWrKIbQF0SkbFz+s3v9fAk2AqCr+SxfV67M3M+sL52/q6TDjeGYJJttwA60gyfH/Qrc/ToCYP3J80Ca/hsk02mya0pF8Kpjg37XP8kNzAllR162mCwYKJgFiXO6Q1eb/aVJwiqmQ=
+  - if [[ $BEHAT_TEST ]]; then php ./vendor/silverstripe/framework/tests/behat/travis-upload-artifacts.php --if-env ARTIFACTS_BUCKET,ARTIFACTS_KEY,ARTIFACTS_SECRET --target-path $TRAVIS_REPO_SLUG/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID --artifacts-base-url https://s3.amazonaws.com/$ARTIFACTS_BUCKET/ --artifacts-path ./artifacts/; fi
