@@ -1,28 +1,15 @@
 {
     "name": "silverstripe/installer",
     "type": "silverstripe-recipe",
-    "description": "Integration testing",
+    "description": "Behat cross-module integration testing",
     "require": {
         "php": ">=7.1.0",
         "silverstripe/recipe-plugin": "^1",
         "silverstripe-themes/simple": "^3",
         "silverstripe/login-forms": "^4",
-        "sminnee/phpunit-mock-objects": "^3",
-        "silverstripe/recipe-testing": "^1",
-        "silverstripe/frameworktest": "^0.1.0",
-        "silverstripe/registry": "^2",
-        "silverstripe/postgresql": "^2",
-        
-        "silverstripe/recipe-cms": "4.6.x-dev",
-        "silverstripe/recipe-content-blocks": "2.6.x-dev"
+        "silverstripe/recipe-cms": "4.x-dev",
+        "silverstripe/recipe-content-blocks": "2.x-dev"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:creative-commoners/silverstripe-crazy-egg.git",
-            "no-api": true
-        }
-    ],
     "extra": {
         "project-files": [
             "app/_config/*",
