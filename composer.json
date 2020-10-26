@@ -8,8 +8,35 @@
         "silverstripe-themes/simple": "^3",
         "silverstripe/login-forms": "^4",
         "silverstripe/recipe-cms": "4.x-dev",
-        "silverstripe/recipe-content-blocks": "2.x-dev"
+        "silverstripe/recipe-content-blocks": "2.x-dev",
+        "silverstripe/framework": "dev-pulls/4/dataobject-usage as 4.x-dev",
+        "silverstripe/admin": "dev-pulls/1/usedontable-usage as 1.x-dev",
+        "silverstripe/asset-admin": "dev-pulls/1/usedontable-updates as 1.x-dev",
+        "silverstripe/versioned-admin": "dev-pulls/1/usedontable-extension as 1.x-dev",
+        "dnadesign/silverstripe-elemental": "dev-pulls/4/update-used-on-table-extension as 4.x-dev"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-elemental.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-versioned-admin.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-asset-admin.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-admin.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-framework.git"
+        }
+    ],
     "extra": {
         "project-files": [
             "app/_config/*",
@@ -24,6 +51,7 @@
             "app/.htaccess",
             "app/_config.php",
             "app/_config/contentblocks.yml",
+            "app/_config/database.yml",
             "app/_config/mimevalidator.yml",
             "app/_config/mysite.yml",
             "app/src/BlocksPage.php",
