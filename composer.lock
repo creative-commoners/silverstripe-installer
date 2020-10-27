@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "08b90ef31515da5f7790dd4d1de4fc80",
+    "content-hash": "367d4f1c4395dc5910ae27115ff78283",
     "packages": [
         {
             "name": "bramus/ansi-php",
@@ -1244,12 +1244,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-admin.git",
-                "reference": "6060ee763dd8722f1e0393979e5d0ad66da1db40"
+                "reference": "db206c9c0b9e23d8461a18489f129a7310b60264"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-admin/zipball/6060ee763dd8722f1e0393979e5d0ad66da1db40",
-                "reference": "6060ee763dd8722f1e0393979e5d0ad66da1db40",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-admin/zipball/db206c9c0b9e23d8461a18489f129a7310b60264",
+                "reference": "db206c9c0b9e23d8461a18489f129a7310b60264",
                 "shasum": ""
             },
             "require": {
@@ -1308,7 +1308,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-admin/tree/pulls/1/usedontable-usage"
             },
-            "time": "2020-10-26T22:16:04+00:00"
+            "time": "2020-10-27T07:54:55+00:00"
         },
         {
             "name": "silverstripe/asset-admin",
@@ -1316,12 +1316,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-asset-admin.git",
-                "reference": "1a1cfc8b1dd6f6a48f9a190c8e62b4af9b6548e1"
+                "reference": "21613198a225a93dae013b5097edbeb6488c695f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-asset-admin/zipball/1a1cfc8b1dd6f6a48f9a190c8e62b4af9b6548e1",
-                "reference": "1a1cfc8b1dd6f6a48f9a190c8e62b4af9b6548e1",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-asset-admin/zipball/21613198a225a93dae013b5097edbeb6488c695f",
+                "reference": "21613198a225a93dae013b5097edbeb6488c695f",
                 "shasum": ""
             },
             "require": {
@@ -1364,7 +1364,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-asset-admin/tree/pulls/1/usedontable-updates"
             },
-            "time": "2020-10-21T19:57:39+00:00"
+            "time": "2020-10-27T00:31:33+00:00"
         },
         {
             "name": "silverstripe/assets",
@@ -1749,12 +1749,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-framework.git",
-                "reference": "8cbdabb5ada782d7d8f1b45e9412e1b34414b28a"
+                "reference": "55c4c402f8f3aee0cfc7e44523fbb0e5d0df49c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/8cbdabb5ada782d7d8f1b45e9412e1b34414b28a",
-                "reference": "8cbdabb5ada782d7d8f1b45e9412e1b34414b28a",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/55c4c402f8f3aee0cfc7e44523fbb0e5d0df49c5",
+                "reference": "55c4c402f8f3aee0cfc7e44523fbb0e5d0df49c5",
                 "shasum": ""
             },
             "require": {
@@ -1871,7 +1871,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-framework/tree/pulls/4/dataobject-usage"
             },
-            "time": "2020-10-23T06:04:21+00:00"
+            "time": "2020-10-27T04:31:29+00:00"
         },
         {
             "name": "silverstripe/graphql",
