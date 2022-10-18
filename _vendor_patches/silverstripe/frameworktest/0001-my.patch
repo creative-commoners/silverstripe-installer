@@ -1,0 +1,190 @@
+diff --git a/code/FrameworktestRegressSessionAdmin.php b/code/FrameworktestRegressSessionAdmin.php
+index d52ce5a..bb7efc0 100644
+--- a/code/FrameworktestRegressSessionAdmin.php
++++ b/code/FrameworktestRegressSessionAdmin.php
+@@ -91,7 +91,7 @@ public function Form()
+         return $form;
+     }
+ 
+-    public function startsession($data, $form)
++    public function startsession(array $data, Form $form): HTTPResponse
+     {
+         Session::set('enabletranslatable', (isset($data['enabletranslatable'])) ? $data['enabletranslatable'] : null);
+         Session::set('db', $data['db']);
+diff --git a/code/TestFileUploadPage.php b/code/TestFileUploadPage.php
+index 068a81e..1eb3906 100644
+--- a/code/TestFileUploadPage.php
++++ b/code/TestFileUploadPage.php
+@@ -6,6 +6,7 @@
+ use SilverStripe\Forms\EmailField;
+ use SilverStripe\Forms\FileField;
+ use SilverStripe\AssetAdmin\Forms\UploadField;
++use SilverStripe\Control\HTTPResponse;
+ use SilverStripe\Forms\FieldList;
+ use SilverStripe\Forms\FormAction;
+ use SilverStripe\Forms\Form;
+@@ -38,11 +39,11 @@ public function Form()
+         return new Form($this, "Form", $fields, $actions);
+     }
+ 
+-    public function addMember($data, $form)
++    public function addMember(array $data, Form $form): HTTPResponse
+     {
+         $member = new Member();
+         $form->saveInto($member);
+         $member->write();
+-        $this->redirectBack();
++        return $this->redirectBack();
+     }
+ }
+diff --git a/code/TestPage.php b/code/TestPage.php
+index 40d2ae7..67c166b 100644
+--- a/code/TestPage.php
++++ b/code/TestPage.php
+@@ -13,6 +13,7 @@
+ use SilverStripe\Forms\Form;
+ use SilverStripe\Forms\TextField;
+ use SilverStripe\Control\Email\Email;
++use SilverStripe\Control\HTTPResponse;
+ use SilverStripe\Security\DefaultAdminService;
+ use SilverStripe\Security\Member;
+ use SilverStripe\Security\Security;
+@@ -111,11 +112,11 @@ public function Form()
+         return $form;
+     }
+ 
+-    public function save($data, $form)
++    public function save(array $data, Form $form): HTTPResponse
+     {
+         $form->saveInto($this->dataRecord);
+         $this->dataRecord->write();
+-        $this->redirectBack();
++        return $this->redirectBack();
+     }
+ 
+     public function gohome()
+@@ -140,7 +141,8 @@ public function email()
+         );
+     }
+ 
+-    public function sendEmail($data, $form)
++    public function sendEmail(array $data, Form $form): HTTPResponse
++
+     {
+         $email = new Email();
+         $email->setTo($data['Email']);
+@@ -149,6 +151,6 @@ public function sendEmail($data, $form)
+         $email->setBody('A body with some umlauts: öäüß');
+         $email->send();
+ 
+-        echo "<p>email sent to " . $data['Email'] . "</p>";
++        return HTTPResponse::create()->setBody("<p>email sent to " . $data['Email'] . "</p>");
+     }
+ }
+diff --git a/code/multiform/Page2MultiForm.php b/code/multiform/Page2MultiForm.php
+index aec9335..683b362 100644
+--- a/code/multiform/Page2MultiForm.php
++++ b/code/multiform/Page2MultiForm.php
+@@ -1,17 +1,18 @@
+ <?php
+ 
++use SilverStripe\Control\HTTPResponse;
+ use SilverStripe\ORM\DataObject;
+ use SilverStripe\Security\Member;
+ use SilverStripe\Forms\TextField;
+ use SilverStripe\Forms\FieldList;
+-
++use SilverStripe\Forms\Form;
+ 
+ class Page2MultiForm extends MultiForm
+ {
+ 
+     public static $start_step = 'Page2PersonalDetailsFormStep';
+ 
+-    public function finish($data, $form)
++    public function finish(array $data, Form $form): HTTPResponse
+     {
+         parent::finish($data, $form);
+         $steps = DataObject::get('MultiFormStep', "SessionID = {$this->session->ID}");
+@@ -42,7 +43,7 @@ public function finish($data, $form)
+             }
+         }
+         $controller = $this->getController();
+-        $controller->redirect($controller->Link() . 'finished');
++        return $controller->redirect($controller->Link() . 'finished');
+     }
+ }
+ 
+diff --git a/code/multiform/Page3MultiForm.php b/code/multiform/Page3MultiForm.php
+index 7d41e59..9a9be6c 100644
+--- a/code/multiform/Page3MultiForm.php
++++ b/code/multiform/Page3MultiForm.php
+@@ -11,7 +11,7 @@ class Page3MultiForm extends MultiForm
+ {
+     public static $start_step = 'Page3StartFormStep';
+ 
+-    public function finish($data, $form)
++    public function finish(array $data, Form $form): HTTPResponse
+     {
+         parent::finish($data, $form);
+         $steps = DataObject::get('MultiFormStep', "SessionID = {$this->session->ID}");
+@@ -42,7 +42,7 @@ public function finish($data, $form)
+             }
+         }
+         $controller = $this->getController();
+-        $controller->redirect($controller->Link() . 'finished');
++        return $controller->redirect($controller->Link() . 'finished');
+     }
+ }
+ 
+diff --git a/code/multiform/TestMultiForm.php b/code/multiform/TestMultiForm.php
+index 5d067ed..02f5b81 100644
+--- a/code/multiform/TestMultiForm.php
++++ b/code/multiform/TestMultiForm.php
+@@ -4,12 +4,14 @@
+ use SilverStripe\Forms\LiteralField;
+ use SilverStripe\Control\Session;
+ use SilverStripe\Control\Director;
++use SilverStripe\Control\HTTPResponse;
++use SilverStripe\Forms\Form;
+ use SilverStripe\Forms\TextField;
+ class TestMultiForm extends MultiForm
+ {
+     public static $start_step = 'TestMultiFormStepOne';
+     
+-    public function finish($data, $form)
++    public function finish(array $data, Form $form): HTTPResponse
+     {
+         parent::finish($data, $form);
+         
+@@ -29,7 +31,7 @@ public function finish($data, $form)
+         
+         Session::set("MultiFormMessage", "Your information has been submitted.");
+         
+-        $this->Controller()->redirect(Director::BaseURL() . $this->Controller()->URLSegment);
++        return $this->Controller()->redirect(Director::BaseURL() . $this->Controller()->URLSegment);
+     }
+ }
+ 
+diff --git a/code/recaptcha/RecaptchaTestPage.php b/code/recaptcha/RecaptchaTestPage.php
+index ed5656c..379e450 100644
+--- a/code/recaptcha/RecaptchaTestPage.php
++++ b/code/recaptcha/RecaptchaTestPage.php
+@@ -7,6 +7,8 @@
+ use SilverStripe\Forms\RequiredFields;
+ use SilverStripe\Forms\Form;
+ use SilverStripe\Control\Director;
++use SilverStripe\Control\HTTPResponse;
++
+ class RecaptchaTestPage extends Page
+ {
+ }
+@@ -38,7 +40,7 @@ public function Form()
+         return $form;
+     }
+ 
+-    public function submit($data, $form)
++    public function submit(array $data, Form $form): HTTPResponse
+     {
+         $form->sessionMessage('Hooray!', 'good');
+ 
