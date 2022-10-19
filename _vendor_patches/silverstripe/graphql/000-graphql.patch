@@ -1,0 +1,90 @@
+diff --git a/src/Schema/Logger.php b/src/Schema/Logger.php
+index c588d76b..1b29bffb 100644
+--- a/src/Schema/Logger.php
++++ b/src/Schema/Logger.php
+@@ -6,6 +6,7 @@
+ use Psr\Log\LoggerInterface;
+ use SilverStripe\Control\Director;
+ use SilverStripe\Core\Injector\Injectable;
++use Stringable;
+ 
+ class Logger implements LoggerInterface
+ {
+@@ -39,7 +40,7 @@ public function setVerbosity(int $level): self
+         return $this;
+     }
+ 
+-    public function alert($message, array $context = [])
++    public function alert(Stringable|string $message, array $context = []):void
+     {
+         if ($this->level > self::ALERT) {
+             return;
+@@ -47,7 +48,7 @@ public function alert($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__), self::RED);
+     }
+ 
+-    public function critical($message, array $context = [])
++    public function critical(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::CRITICAL) {
+             return;
+@@ -56,7 +57,7 @@ public function critical($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__), self::RED);
+     }
+ 
+-    public function debug($message, array $context = [])
++    public function debug(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::DEBUG) {
+             return;
+@@ -65,7 +66,7 @@ public function debug($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__));
+     }
+ 
+-    public function emergency($message, array $context = [])
++    public function emergency(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::EMERGENCY) {
+             return;
+@@ -74,7 +75,7 @@ public function emergency($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__), self::RED);
+     }
+ 
+-    public function error($message, array $context = [])
++    public function error(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::ERROR) {
+             return;
+@@ -83,7 +84,7 @@ public function error($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__), self::RED);
+     }
+ 
+-    public function info($message, array $context = [])
++    public function info(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::INFO) {
+             return;
+@@ -92,12 +93,12 @@ public function info($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__), self::CYAN);
+     }
+ 
+-    public function log($level, $message, array $context = [])
++    public function log($level, Stringable|string $message, array $context = []): void
+     {
+         $this->output($message, strtoupper(__FUNCTION__));
+     }
+ 
+-    public function notice($message, array $context = [])
++    public function notice(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::NOTICE) {
+             return;
+@@ -106,7 +107,7 @@ public function notice($message, array $context = [])
+         $this->output($message, strtoupper(__FUNCTION__), self::YELLOW);
+     }
+ 
+-    public function warning($message, array $context = [])
++    public function warning(Stringable|string $message, array $context = []): void
+     {
+         if ($this->level > self::WARNING) {
+             return;
