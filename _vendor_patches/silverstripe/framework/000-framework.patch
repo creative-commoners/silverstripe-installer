@@ -1,0 +1,170 @@
+diff --git a/composer.json b/composer.json
+index 1cd80f8cd1d..cc844963f1e 100644
+--- a/composer.json
++++ b/composer.json
+@@ -24,15 +24,15 @@
+     "require": {
+         "php": "^8.1",
+         "bramus/monolog-colored-line-formatter": "^2.0.3",
+-        "composer/installers": "^2.1.1",
+-        "guzzlehttp/guzzle": "^7.4.5",
++        "composer/installers": "^2.2",
++        "guzzlehttp/guzzle": "^7.5.0",
+         "guzzlehttp/psr7": "^2.4.0",
+         "embed/embed": "^4.4.4",
+         "league/csv": "^9.8.0",
+         "m1/env": "^2.2.0",
+-        "monolog/monolog": "^1.27.1",
+-        "nikic/php-parser": "^4.14.0",
+-        "psr/container": "^1.1.2",
++        "monolog/monolog": "^3.2.0",
++        "nikic/php-parser": "^4.15.0",
++        "psr/container": "^2.0",
+         "silverstripe/config": "^2",
+         "silverstripe/assets": "^2",
+         "silverstripe/vendor-plugin": "^2",
+@@ -102,8 +102,6 @@
+         ]
+     },
+     "include-path": [
+-        "src/",
+-        "src/includes/",
+         "thirdparty/"
+     ],
+     "scripts": {
+@@ -113,4 +111,4 @@
+     },
+     "minimum-stability": "dev",
+     "prefer-stable": true
+-}
++}
+\ No newline at end of file
+diff --git a/src/Core/Injector/Injector.php b/src/Core/Injector/Injector.php
+index 7136a605b1d..f845eb1a402 100644
+--- a/src/Core/Injector/Injector.php
++++ b/src/Core/Injector/Injector.php
+@@ -874,10 +874,8 @@ public function hasService($name)
+      *
+      * Will recursively call itself for each depth of dotting.
+      *
+-     * @param string $name
+-     * @return boolean
+      */
+-    public function has($name)
++    public function has(string $name): bool
+     {
+         return (bool)$this->getServiceName($name);
+     }
+diff --git a/src/Logging/DebugViewFriendlyErrorFormatter.php b/src/Logging/DebugViewFriendlyErrorFormatter.php
+index 66f3be63c1b..6769c97e4d1 100644
+--- a/src/Logging/DebugViewFriendlyErrorFormatter.php
++++ b/src/Logging/DebugViewFriendlyErrorFormatter.php
+@@ -7,6 +7,7 @@
+ use SilverStripe\Control\Director;
+ use SilverStripe\Control\Email\Email;
+ use Monolog\Formatter\FormatterInterface;
++use Monolog\LogRecord;
+ 
+ /**
+  * Produce a friendly error message
+@@ -101,7 +102,7 @@ public function setBody($body)
+         return $this;
+     }
+ 
+-    public function format(array $record)
++    public function format(array|LogRecord $record)
+     {
+         // Get error code
+         $code = empty($record['code']) ? $this->getStatusCode() : $record['code'];
+diff --git a/src/Logging/DetailedErrorFormatter.php b/src/Logging/DetailedErrorFormatter.php
+index ac2622cbc69..ed7f755d4d1 100644
+--- a/src/Logging/DetailedErrorFormatter.php
++++ b/src/Logging/DetailedErrorFormatter.php
+@@ -4,6 +4,7 @@
+ 
+ use SilverStripe\Dev\Debug;
+ use Monolog\Formatter\FormatterInterface;
++use Monolog\LogRecord;
+ use Exception;
+ 
+ /**
+@@ -11,7 +12,7 @@
+  */
+ class DetailedErrorFormatter implements FormatterInterface
+ {
+-    public function format(array $record)
++    public function format(array|LogRecord $record)
+     {
+         if (isset($record['context']['exception'])) {
+             /** @var Exception $exception */
+diff --git a/src/Logging/HTTPOutputHandler.php b/src/Logging/HTTPOutputHandler.php
+index b09a671f3f6..dbc89c4f28f 100644
+--- a/src/Logging/HTTPOutputHandler.php
++++ b/src/Logging/HTTPOutputHandler.php
+@@ -4,6 +4,7 @@
+ 
+ use Monolog\Formatter\FormatterInterface;
+ use Monolog\Handler\AbstractProcessingHandler;
++use Monolog\LogRecord;
+ use SilverStripe\Control\Controller;
+ use SilverStripe\Control\Director;
+ use SilverStripe\Control\HTTPResponse;
+@@ -106,7 +107,7 @@ public function getCLIFormatter()
+      *
+      * @return FormatterInterface
+      */
+-    public function getFormatter()
++    public function getFormatter(): FormatterInterface
+     {
+         if (Director::is_cli() && ($cliFormatter = $this->getCLIFormatter())) {
+             return $cliFormatter;
+@@ -120,7 +121,7 @@ public function getFormatter()
+      *
+      * @return FormatterInterface
+      */
+-    public function getDefaultFormatter()
++    public function getDefaultFormatter(): FormatterInterface
+     {
+         return parent::getFormatter();
+     }
+@@ -141,7 +142,7 @@ public function setDefaultFormatter(FormatterInterface $formatter)
+      * @param array $record
+      * @return bool
+      */
+-    protected function write(array $record)
++    protected function write(LogRecord $record): void
+     {
+         ini_set('display_errors', 0);
+ 
+@@ -164,7 +165,5 @@ protected function write(array $record)
+ 
+         $response->setBody($record['formatted']);
+         $response->output();
+-
+-        return false === $this->getBubble();
+     }
+ }
+diff --git a/src/Logging/PreformattedEchoHandler.php b/src/Logging/PreformattedEchoHandler.php
+index b7a4d6821f8..14f56b1d28e 100644
+--- a/src/Logging/PreformattedEchoHandler.php
++++ b/src/Logging/PreformattedEchoHandler.php
+@@ -3,6 +3,7 @@
+ namespace SilverStripe\Logging;
+ 
+ use Monolog\Handler\AbstractProcessingHandler;
++use Monolog\LogRecord;
+ 
+ /**
+  * Echo the output as preformatted HTML, emulating console output in a browser.
+@@ -17,10 +18,7 @@
+ class PreformattedEchoHandler extends AbstractProcessingHandler
+ {
+ 
+-    /**
+-     * @param array $record
+-     */
+-    protected function write(array $record)
++    protected function write(LogRecord $record): void
+     {
+         echo sprintf('<pre>%s</pre>', htmlspecialchars($record['formatted'], ENT_QUOTES, 'UTF-8'));
+     }

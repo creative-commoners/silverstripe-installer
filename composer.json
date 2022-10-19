@@ -7,7 +7,14 @@
         "silverstripe/recipe-plugin": "^2",
         "silverstripe/recipe-cms": "5.x-dev",
         "silverstripe-themes/simple": "~3.2.0",
-        "silverstripe/login-forms": "5.x-dev"
+        "silverstripe/login-forms": "5.x-dev",
+        "emteknetnz/vendor-code-patcher": "^0.2.9",
+        "composer/installers": "2.2 as 2.1.1",
+        "guzzlehttp/guzzle": "7.5.0 as 7.4.5",
+        "monolog/monolog": "3.2.0 as 1.27.1",
+        "nikic/php-parser": "4.15.0 as 4.14.0",
+        "psr/container": "2.0 as 1.1.2",
+        "league/flysystem": "3.0 as 1.27.1"
     },
     "require-dev": {
         "silverstripe/recipe-testing": "^3",
