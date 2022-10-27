@@ -1,0 +1,1091 @@
+diff --git a/_config/asset.yml b/_config/asset.yml
+index 173dddae..e7a165b2 100644
+--- a/_config/asset.yml
++++ b/_config/asset.yml
+@@ -10,14 +10,14 @@ SilverStripe\Core\Injector\Injector:
+     class: SilverStripe\Assets\Flysystem\ProtectedAssetAdapter
+   # Define the default filesystem
+   League\Flysystem\Filesystem.public:
+-    class: League\Flysystem\Filesystem
++    class: SilverStripe\Assets\Flysystem\Filesystem
+     constructor:
+       FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\PublicAdapter'
+       FilesystemConfig:
+         visibility: public
+   # Define the secondary filesystem for protected assets
+   League\Flysystem\Filesystem.protected:
+-    class: League\Flysystem\Filesystem
++    class: SilverStripe\Assets\Flysystem\Filesystem
+     constructor:
+       FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\ProtectedAdapter'
+       FilesystemConfig:
+diff --git a/composer.json b/composer.json
+index f72566d3..2c479de0 100644
+--- a/composer.json
++++ b/composer.json
+@@ -24,7 +24,7 @@
+         "silverstripe/vendor-plugin": "^2",
+         "symfony/filesystem": "^6.1",
+         "intervention/image": "^2.7.2",
+-        "league/flysystem": "^1.1.9"
++        "league/flysystem": "^3.9.0"
+     },
+     "require-dev": {
+         "silverstripe/recipe-testing": "^3",
+diff --git a/src/Dev/Tasks/LegacyThumbnailMigrationHelper.php b/src/Dev/Tasks/LegacyThumbnailMigrationHelper.php
+index b6681168..fe6e6987 100644
+--- a/src/Dev/Tasks/LegacyThumbnailMigrationHelper.php
++++ b/src/Dev/Tasks/LegacyThumbnailMigrationHelper.php
+@@ -146,7 +146,7 @@ protected function migrateFolder(FlysystemAssetStore $store, Folder $folder)
+ 
+         $foundError = false;
+         // Recurse through folder
+-        foreach ($filesystem->listContents($resampledFolderPath, true) as $fileInfo) {
++        foreach ($filesystem->listContents($resampledFolderPath, true)->toArray() as $fileInfo) {
+             if ($fileInfo['type'] !== 'file') {
+                 continue;
+             }
+@@ -179,7 +179,7 @@ protected function migrateFolder(FlysystemAssetStore $store, Folder $folder)
+                 continue;
+             }
+ 
+-            $filesystem->rename($oldResampledPath, $newResampledPath);
++            $filesystem->move($oldResampledPath, $newResampledPath);
+ 
+             $this->logger->info(sprintf('Moved legacy thumbnail %s to %s', $oldResampledPath, $newResampledPath));
+ 
+@@ -190,13 +190,13 @@ protected function migrateFolder(FlysystemAssetStore $store, Folder $folder)
+         // get migrated leave the folder where it is.
+         if (!$foundError) {
+             $files = array_filter(
+-                $filesystem->listContents($resampledFolderPath, true) ?? [],
++                $filesystem->listContents($resampledFolderPath, true)->toArray() ?? [],
+                 function ($file) {
+                     return $file['type'] === 'file';
+                 }
+             );
+             if (empty($files)) {
+-                $filesystem->deleteDir($resampledFolderPath);
++                $filesystem->deleteDirectory($resampledFolderPath);
+             } else {
+                 // This should not be possible. If it is, then there's probably a bug.
+                 $this->logger->error(sprintf(
+diff --git a/src/Dev/Tasks/NormaliseAccessMigrationHelper.php b/src/Dev/Tasks/NormaliseAccessMigrationHelper.php
+index b251d3b1..e23fcfc6 100644
+--- a/src/Dev/Tasks/NormaliseAccessMigrationHelper.php
++++ b/src/Dev/Tasks/NormaliseAccessMigrationHelper.php
+@@ -4,7 +4,7 @@
+ use Exception;
+ use InvalidArgumentException;
+ use League\Flysystem\Filesystem;
+-use League\Flysystem\FilesystemInterface;
++use League\Flysystem\FilesystemOperator;
+ use LogicException;
+ use Psr\Log\LoggerInterface;
+ use Psr\Log\NullLogger;
+@@ -290,7 +290,7 @@ private function cleanup()
+         foreach ($this->public_folders_to_truncate as $path) {
+             if ($this->canBeTruncated($path, $fs)) {
+                 $this->info(sprintf('Deleting empty folder %s', $path));
+-                $fs->deleteDir($path);
++                $fs->deleteDirectory($path);
+                 $truncatedPaths[] = $path;
+             }
+         }
+@@ -308,17 +308,17 @@ private function cleanup()
+     /**
+      * Check if the provided folder can be deleted on this Filesystem
+      * @param string $path
+-     * @param FilesystemInterface $fs
++     * @param FilesystemOperator $fs
+      * @return bool
+      */
+-    private function canBeTruncated($path, FilesystemInterface $fs)
++    private function canBeTruncated($path, FilesystemOperator $fs)
+     {
+-        if (!$fs->has($path)) {
++        if (!$fs->directoryExists($path)) {
+             // The folder doesn't exists
+             return false;
+         }
+ 
+-        $contents = $fs->listContents($path);
++        $contents = $fs->listContents($path, true)->toArray();
+ 
+         foreach ($contents as $content) {
+             if ($content['type'] !== 'dir') {
+@@ -341,14 +341,14 @@ private function canBeTruncated($path, FilesystemInterface $fs)
+     /**
+      * Delete this folder if it doesn't contain any files and parent folders if they don't contain any files either.
+      * @param string $path
+-     * @param FilesystemInterface $fs
++     * @param FilesystemOperator $fs
+      */
+-    private function recursiveTruncate($path, FilesystemInterface $fs)
++    private function recursiveTruncate($path, FilesystemOperator $fs)
+     {
+-        if ($path && ltrim($path ?? '', '.') && empty($fs->listContents($path))
++        if ($path && ltrim($path ?? '', '.') && empty($fs->listContents($path)->toArray())
+         ) {
+             $this->info(sprintf('Deleting empty folder %s', $path));
+-            $fs->deleteDir($path);
++            $fs->deleteDirectory($path);
+             $this->recursiveTruncate(dirname($path ?? ''), $fs);
+         }
+     }
+diff --git a/src/Dev/TestAssetStore.php b/src/Dev/TestAssetStore.php
+index c4f354df..693a4e43 100644
+--- a/src/Dev/TestAssetStore.php
++++ b/src/Dev/TestAssetStore.php
+@@ -2,11 +2,10 @@
+ 
+ namespace SilverStripe\Assets\Dev;
+ 
+-use League\Flysystem\Adapter\Local;
+-use League\Flysystem\AdapterInterface;
+-use League\Flysystem\Filesystem;
++use League\Flysystem\Visibility;
+ use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
+ use SilverStripe\Assets\Filesystem as SSFilesystem;
++use SilverStripe\Assets\Flysystem\LocalFilesystemAdapter;
+ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
+ use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
+ use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
+@@ -16,6 +15,7 @@
+ use SilverStripe\Assets\Storage\AssetStoreRouter;
+ use SilverStripe\Assets\Storage\DBFile;
+ use SilverStripe\Assets\File;
++use SilverStripe\Assets\Flysystem\Filesystem;
+ use SilverStripe\Assets\Folder;
+ use SilverStripe\Assets\Storage\GeneratedAssetHandler;
+ use SilverStripe\Control\Controller;
+@@ -65,14 +65,14 @@ public static function activate($basedir)
+         $publicFilesystem = new Filesystem(
+             $publicAdapter,
+             [
+-                'visibility' => AdapterInterface::VISIBILITY_PUBLIC
++                'visibility' => Visibility::PUBLIC
+             ]
+         );
+         $protectedAdapter = new ProtectedAssetAdapter(ASSETS_PATH . '/' . $basedir . '/.protected');
+         $protectedFilesystem = new Filesystem(
+             $protectedAdapter,
+             [
+-                'visibility' => AdapterInterface::VISIBILITY_PRIVATE
++                'visibility' => Visibility::PRIVATE
+             ]
+         );
+ 
+@@ -156,9 +156,9 @@ public static function getLocalPath(AssetContainer $asset, $forceProtected = fal
+         if (!$forceProtected && !$filesystem->has($fileID)) {
+             $filesystem = $assetStore->getPublicFilesystem();
+         }
+-        /** @var Local $adapter */
++        /** @var LocalFilesystemAdapter $adapter */
+         $adapter = $filesystem->getAdapter();
+-        return $relative ? $fileID : $adapter->applyPathPrefix($fileID);
++        return $relative ? $fileID : $adapter->prefixPath($fileID);
+     }
+ 
+     public function cleanFilename($filename)
+diff --git a/src/FilenameParsing/FileIDHelperResolutionStrategy.php b/src/FilenameParsing/FileIDHelperResolutionStrategy.php
+index 5a183e0b..38be4bef 100644
+--- a/src/FilenameParsing/FileIDHelperResolutionStrategy.php
++++ b/src/FilenameParsing/FileIDHelperResolutionStrategy.php
+@@ -2,6 +2,7 @@
+ 
+ namespace SilverStripe\Assets\FilenameParsing;
+ 
++use Exception;
+ use InvalidArgumentException;
+ use League\Flysystem\Filesystem;
+ use SilverStripe\Assets\Storage\FileHashingService;
+@@ -298,7 +299,7 @@ private function validateHash(FileIDHelper $helper, ParsedFileID $parsedFileID,
+      * @param ParsedFileID $parsedFileID
+      * @param Filesystem $filesystem
+      * @return bool|string
+-     * @throws \League\Flysystem\FileNotFoundException
++     * @throws Exception
+      */
+     private function findHashOf(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $filesystem)
+     {
+@@ -436,7 +437,7 @@ public function findVariants($tuple, Filesystem $filesystem)
+ 
+             // Find the correct folder to search for possible variants in
+             $folder = $helper->lookForVariantIn($parsedFileID);
+-            $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
++            $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive())->toArray();
+ 
+             // Flysystem returns array of meta data abouch each file, we remove directories and map it down to the path
+             $possibleVariants = array_filter($possibleVariants ?? [], function ($possibleVariant) {
+diff --git a/src/FilenameParsing/FileResolutionStrategy.php b/src/FilenameParsing/FileResolutionStrategy.php
+index 776543fc..c3ec11c3 100644
+--- a/src/FilenameParsing/FileResolutionStrategy.php
++++ b/src/FilenameParsing/FileResolutionStrategy.php
+@@ -68,7 +68,7 @@ public function parseFileID($fileID);
+      * @param array|ParsedFileID $tuple
+      * @param Filesystem $filesystem
+      * @return generator|ParsedFileID[]|null
+-     * @throws \League\Flysystem\FileNotFoundException
++     * @throws \League\Flysystem\UnableToCheckExistence
+      */
+     public function findVariants($tuple, Filesystem $filesystem);
+ 
+diff --git a/src/Flysystem/AssetAdapter.php b/src/Flysystem/AssetAdapter.php
+index d6c1d3fd..df18497a 100644
+--- a/src/Flysystem/AssetAdapter.php
++++ b/src/Flysystem/AssetAdapter.php
+@@ -3,8 +3,9 @@
+ namespace SilverStripe\Assets\Flysystem;
+ 
+ use Exception;
+-use League\Flysystem\Adapter\Local;
+ use League\Flysystem\Config as FlysystemConfig;
++use League\Flysystem\UnableToWriteFile;
++use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
+ use SilverStripe\Assets\File;
+ use SilverStripe\Assets\Filesystem;
+ use SilverStripe\Core\Config\Config;
+@@ -16,7 +17,7 @@
+ /**
+  * Adapter for local filesystem based on assets directory
+  */
+-class AssetAdapter extends Local
++class AssetAdapter extends LocalFilesystemAdapter
+ {
+     use Configurable;
+ 
+@@ -61,8 +62,10 @@ public function __construct($root = null, $writeFlags = LOCK_EX, $linkHandling =
+         $root = realpath($root ?? '');
+ 
+         // Override permissions with config
+-        $permissions = $this->normalisePermissions($this->config()->get('file_permissions'));
+-        parent::__construct($root, $writeFlags, $linkHandling, $permissions);
++        $permissions = PortableVisibilityConverter::fromArray(
++            $this->normalisePermissions($this->config()->get('file_permissions'))
++        );
++        parent::__construct($root, $permissions, $writeFlags, $linkHandling);
+ 
+         // Configure server
+         $this->configureServer();
+@@ -146,18 +149,19 @@ protected function configureServer($forceOverwrite = false)
+ 
+         // Apply each configuration
+         $config = new FlysystemConfig();
+-        $config->set('visibility', $visibility);
++        $config->extend(['visibility' => $visibility]);
+         foreach ($configurations as $file => $template) {
+             // Ensure file contents
+-            if ($forceOverwrite || !$this->has($file)) {
++            if ($forceOverwrite || !$this->fileExists($file)) {
+                 // Evaluate file
+-                $content = $this->renderTemplate($template);
+-                $success = $this->write($file, $content, $config);
+-                if (!$success) {
++                try {
++                    $content = $this->renderTemplate($template);
++                    $this->write($file, $content, $config);
++                } catch (UnableToWriteFile $exception) {
+                     throw new Exception("Error writing server configuration file \"{$file}\"");
+                 }
+             }
+-            $perms = $this->getVisibility($file);
++            $perms = $this->visibility($file);
+             if ($perms['visibility'] !== $visibility) {
+                 // Ensure correct permissions
+                 $this->setVisibility($file, $visibility);
+diff --git a/src/Flysystem/Filesystem.php b/src/Flysystem/Filesystem.php
+new file mode 100644
+index 00000000..3fa0e55f
+--- /dev/null
++++ b/src/Flysystem/Filesystem.php
+@@ -0,0 +1,35 @@
++<?php
++
++namespace SilverStripe\Assets\Flysystem;
++
++use League\Flysystem\Filesystem as LeagueFilesystem;
++use League\Flysystem\FilesystemAdapter;
++use League\Flysystem\PathNormalizer;
++use League\Flysystem\WhitespacePathNormalizer;
++
++class Filesystem extends LeagueFilesystem
++{
++    private $adapter;
++
++    public function __construct(
++        FilesystemAdapter $adapter,
++        array $config = [],
++        PathNormalizer $pathNormalizer = null
++    ) {
++        $this->adapter = $adapter;
++        $this->pathNormalizer = $pathNormalizer ?: new WhitespacePathNormalizer();
++        parent::__construct($adapter, $config, $pathNormalizer);
++    }
++
++    public function getAdapter(): FilesystemAdapter
++    {
++        return $this->adapter;
++    }
++
++    public function has(string $location): bool
++    {
++        $path = $this->pathNormalizer->normalizePath($location);
++
++        return strlen($path) === 0 ? false : ($this->getAdapter()->fileExists($path) || $this->getAdapter()->directoryExists($path));
++    }
++}
+diff --git a/src/Flysystem/FlysystemAssetStore.php b/src/Flysystem/FlysystemAssetStore.php
+index 1fd076f6..7d51605a 100644
+--- a/src/Flysystem/FlysystemAssetStore.php
++++ b/src/Flysystem/FlysystemAssetStore.php
+@@ -4,12 +4,11 @@
+ 
+ use Generator;
+ use InvalidArgumentException;
+-use League\Flysystem\Directory;
+-use League\Flysystem\Exception as FlysystemException;
+-use League\Flysystem\Filesystem;
+-use League\Flysystem\Util;
++use League\Flysystem\DirectoryListing;
++use League\Flysystem\UnableToWriteFile;
+ use LogicException;
+ use SilverStripe\Assets\File;
++use SilverStripe\Assets\Util;
+ use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+ use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
+ use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+@@ -581,7 +580,7 @@ public function setFromStream($stream, $filename, $hash = null, $variant = null,
+                 }
+             }
+ 
+-            $result = $filesystem->putStream($fileID, $stream);
++            $result = $filesystem->writeStream($fileID, $stream);
+ 
+             // If we have an hash for a main file, let's pre-warm our file hashing cache.
+             if ($hash || !$variant) {
+@@ -640,7 +639,7 @@ function (ParsedFileID $parsedFileID, Filesystem $fs, FileResolutionStrategy $st
+                             // Invalidate hash of delete file
+                             $hasher->invalidate($origin, $fs);
+                         } else {
+-                            $fs->rename($origin, $destination);
++                            $fs->move($origin, $destination);
+                             // Move cached hash value to new location
+                             $hasher->move($origin, $fs, $destination);
+                         }
+@@ -754,9 +753,9 @@ protected function truncateDirectory($dirname, Filesystem $filesystem)
+         if ($dirname
+             && ltrim($dirname ?? '', '.')
+             && !$this->config()->get('keep_empty_dirs')
+-            && !$filesystem->listContents($dirname)
++            && !$filesystem->listContents($dirname)->toArray()
+         ) {
+-            $filesystem->deleteDir($dirname);
++            $filesystem->deleteDirectory($dirname);
+             $this->truncateDirectory(dirname($dirname ?? ''), $filesystem);
+         }
+     }
+@@ -772,7 +771,7 @@ protected function truncateDirectory($dirname, Filesystem $filesystem)
+     protected function findVariants($fileID, Filesystem $filesystem)
+     {
+         $dirname = ltrim(dirname($fileID ?? ''), '.');
+-        foreach ($filesystem->listContents($dirname) as $next) {
++        foreach ($filesystem->listContents($dirname)->toArray() as $next) {
+             if ($next['type'] !== 'file') {
+                 continue;
+             }
+@@ -840,7 +839,7 @@ public function swapPublish($filename, $hash)
+ 
+                 // Cache destination file into the origin store under a `.swap` directory
+                 $stream = $to->readStream($toFileID);
+-                $from->putStream('.swap/' . $fromFileID, $stream);
++                $from->writeStream('.swap/' . $fromFileID, $stream);
+                 if (is_resource($stream)) {
+                     fclose($stream);
+                 }
+@@ -862,7 +861,7 @@ public function swapPublish($filename, $hash)
+             $toFileID = $toStrategy->buildFileID($variantParsedFileID);
+ 
+             $stream = $from->readStream($fromFileID);
+-            $to->putStream($toFileID, $stream);
++            $to->writeStream($toFileID, $stream);
+             if (is_resource($stream)) {
+                 fclose($stream);
+             }
+@@ -875,10 +874,10 @@ public function swapPublish($filename, $hash)
+ 
+         foreach ($swapFiles as $variantParsedFileID) {
+             $fileID = $variantParsedFileID->getFileID();
+-            $from->rename('.swap/' . $fileID, $fileID);
++            $from->move('.swap/' . $fileID, $fileID);
+             $hasher->move('.swap/' . $fileID, $from, $fileID);
+         }
+-        $from->deleteDir('.swap');
++        $from->deleteDirectory('.swap');
+     }
+ 
+     public function protect($filename, $hash)
+@@ -916,7 +915,7 @@ protected function moveBetweenFilesystems($fileID, Filesystem $from, Filesystem
+         foreach ($this->findVariants($fileID, $from) as $nextID) {
+             // Copy via stream
+             $stream = $from->readStream($nextID);
+-            $to->putStream($nextID, $stream);
++            $to->writeStream($nextID, $stream);
+             if (is_resource($stream)) {
+                 fclose($stream);
+             }
+@@ -954,7 +953,7 @@ protected function moveBetweenFileStore(
+             $toFileID = $toStrategy->buildFileID($variantParsedFileID);
+ 
+             $stream = $from->readStream($fromFileID);
+-            $to->putStream($toFileID, $stream);
++            $to->writeStream($toFileID, $stream);
+             if (is_resource($stream)) {
+                 fclose($stream);
+             }
+@@ -1071,7 +1070,7 @@ protected function getStreamSHA1($stream)
+      *
+      * @param resource $stream
+      * @return string Filename of resulting stream content
+-     * @throws FlysystemException
++     * @throws UnableToWriteFile
+      */
+     protected function getStreamAsFile($stream)
+     {
+@@ -1079,14 +1078,14 @@ protected function getStreamAsFile($stream)
+         $file = tempnam(sys_get_temp_dir(), 'ssflysystem');
+         $buffer = fopen($file ?? '', 'w');
+         if (!$buffer) {
+-            throw new FlysystemException("Could not create temporary file");
++            throw new UnableToWriteFile("Could not create temporary file");
+         }
+ 
+         // Transfer from given stream
+         Util::rewindStream($stream);
+         stream_copy_to_stream($stream, $buffer);
+         if (!fclose($buffer)) {
+-            throw new FlysystemException("Could not write stream to temporary file");
++            throw new UnableToWriteFile("Could not write stream to temporary file");
+         }
+ 
+         return $file;
+@@ -1113,7 +1112,7 @@ protected function isSeekableStream($stream)
+      * @param string $variant Variant to write
+      * @param array $config Write options. {@see AssetStore}
+      * @return array Tuple associative array (Filename, Hash, Variant)
+-     * @throws FlysystemException
++     * @throws UnableToWriteFile
+      */
+     protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = [])
+     {
+@@ -1198,10 +1197,7 @@ function (
+         }
+ 
+         // Submit and validate result
+-        $result = $callback($fs, $parsedFileID->getFileID());
+-        if (!$result) {
+-            throw new FlysystemException("Could not save {$filename}");
+-        }
++        $callback($fs, $parsedFileID->getFileID());
+ 
+         return $parsedFileID->getTuple();
+     }
+@@ -1233,7 +1229,15 @@ public function getMetadata($filename, $hash, $variant = null)
+         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
+         return $this->applyToFileOnFilesystem(
+             function (ParsedFileID $parsedFileID, Filesystem $fs) {
+-                return $fs->getMetadata($parsedFileID->getFileID());
++                $path = $parsedFileID->getFileID();
++                return [
++                    'timestamp' => $fs->lastModified($path),
++                    'fileExists' => $fs->fileExists($path),
++                    'directoryExists' => $fs->directoryExists($path),
++                    'type' => $fs->mimeType($path),
++                    'size' => $fs->fileSize($path),
++                    'visibility' => $fs->visibility($path),
++                ];
+             },
+             new ParsedFileID($filename, $hash, $variant)
+         );
+@@ -1244,7 +1248,7 @@ public function getMimeType($filename, $hash, $variant = null)
+         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
+         return $this->applyToFileOnFilesystem(
+             function (ParsedFileID $parsedFileID, Filesystem $fs) {
+-                return $fs->getMimetype($parsedFileID->getFileID());
++                return $fs->mimetype($parsedFileID->getFileID());
+             },
+             new ParsedFileID($filename, $hash, $variant)
+         );
+@@ -1551,14 +1555,14 @@ private function generateResponseFor(string $asset): array
+     protected function createResponseFor(Filesystem $flysystem, $fileID)
+     {
+         // Block directory access
+-        if ($flysystem->get($fileID) instanceof Directory) {
++        if ($flysystem->directoryExists($fileID)) {
+             return $this->createDeniedResponse();
+         }
+ 
+         // Create streamable response
+         $stream = $flysystem->readStream($fileID);
+-        $size = $flysystem->getSize($fileID);
+-        $mime = $flysystem->getMimetype($fileID);
++        $size = $flysystem->fileSize($fileID);
++        $mime = $flysystem->mimetype($fileID);
+         $response = HTTPStreamResponse::create($stream, $size)
+             ->addHeader('Content-Type', $mime);
+ 
+@@ -1655,7 +1659,7 @@ function (...$args) {
+      * @param FileResolutionStrategy $strategy
+      * @return array List of new file names with the old name as the key
+      * @throws \League\Flysystem\FileExistsException
+-     * @throws \League\Flysystem\FileNotFoundException
++     * @throws \League\Flysystem\UnableToCheckExistence
+      */
+     private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
+     {
+@@ -1689,7 +1693,7 @@ private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, File
+                     $fs->delete($origin);
+                     $hasher->invalidate($origin, $fs);
+                 } else {
+-                    $fs->rename($origin, $targetVariantFileID);
++                    $fs->move($origin, $targetVariantFileID);
+                     $hasher->move($origin, $fs, $targetVariantFileID);
+                     $ops[$origin] = $targetVariantFileID;
+                 }
+diff --git a/src/Flysystem/GeneratedAssets.php b/src/Flysystem/GeneratedAssets.php
+index c0f4dd6d..1e80b078 100644
+--- a/src/Flysystem/GeneratedAssets.php
++++ b/src/Flysystem/GeneratedAssets.php
+@@ -3,8 +3,8 @@
+ namespace SilverStripe\Assets\Flysystem;
+ 
+ use Exception;
+-use League\Flysystem\File;
+-use League\Flysystem\Filesystem;
++use SilverStripe\Assets\Flysystem\Filesystem;
++use League\Flysystem\UnableToWriteFile;
+ use SilverStripe\Assets\Storage\GeneratedAssetHandler;
+ 
+ /**
+@@ -80,7 +80,7 @@ public function getContent($filename, $callback = null)
+      * @param string $filename
+      * @param callable $callback
+      * @return bool Whether or not the file exists
+-     * @throws Exception If an error has occurred during save
++     * @throws UnableToWriteFile If an error has occurred during save
+      */
+     protected function checkOrCreate($filename, $callback = null)
+     {
+@@ -102,21 +102,14 @@ protected function checkOrCreate($filename, $callback = null)
+     public function setContent($filename, $content)
+     {
+         // Store content
+-        $result = $this
+-                ->getFilesystem()
+-                ->put($filename, $content);
+-
+-        if (!$result) {
+-            throw new Exception("Error regenerating file \"{$filename}\"");
+-        }
++        $this->getFilesystem()->write($filename, $content);
+     }
+ 
+     public function removeContent($filename)
+     {
+-        if ($this->getFilesystem()->has($filename)) {
+-            /** @var File $handler */
+-            $handler = $this->getFilesystem()->get($filename);
+-            $handler->delete();
++        if ($this->getFilesystem()->fileExists($filename)) {
++            /** @var Filesystem $handler */
++            $this->getFilesystem()->delete($filename);
+         }
+     }
+ }
+diff --git a/src/Flysystem/LocalFilesystemAdapter.php b/src/Flysystem/LocalFilesystemAdapter.php
+new file mode 100644
+index 00000000..bd41de63
+--- /dev/null
++++ b/src/Flysystem/LocalFilesystemAdapter.php
+@@ -0,0 +1,29 @@
++<?php
++
++namespace SilverStripe\Assets\Flysystem;
++
++use League\Flysystem\Local\LocalFilesystemAdapter as LeagueLocalFilesystemAdapter;
++use League\Flysystem\PathPrefixer;
++use League\Flysystem\UnixVisibility\VisibilityConverter;
++use League\MimeTypeDetection\MimeTypeDetector;
++
++class LocalFilesystemAdapter extends LeagueLocalFilesystemAdapter
++{
++    private PathPrefixer $pathPrefixer;
++
++    public function __construct(
++        string $location,
++        VisibilityConverter $visibility = null,
++        int $writeFlags = LOCK_EX,
++        int $linkHandling = self::DISALLOW_LINKS,
++        MimeTypeDetector $mimeTypeDetector = null
++    ) {
++        $this->pathPrefixer = new PathPrefixer($location);
++        parent::__construct($location, $visibility, $writeFlags, $linkHandling, $mimeTypeDetector);
++    }
++
++    public function prefixPath(string $path): string
++    {
++        return $this->pathPrefixer->prefixPath($path);
++    }
++}
+diff --git a/src/Flysystem/ProtectedAdapter.php b/src/Flysystem/ProtectedAdapter.php
+index 33f76df3..c6db532b 100644
+--- a/src/Flysystem/ProtectedAdapter.php
++++ b/src/Flysystem/ProtectedAdapter.php
+@@ -2,12 +2,12 @@
+ 
+ namespace SilverStripe\Assets\Flysystem;
+ 
+-use League\Flysystem\AdapterInterface;
++use League\Flysystem\FilesystemAdapter;
+ 
+ /**
+  * An adapter which does not publicly expose protected files
+  */
+-interface ProtectedAdapter extends AdapterInterface
++interface ProtectedAdapter extends FilesystemAdapter
+ {
+ 
+     /**
+diff --git a/src/Flysystem/PublicAdapter.php b/src/Flysystem/PublicAdapter.php
+index 0770e246..3722b3ee 100644
+--- a/src/Flysystem/PublicAdapter.php
++++ b/src/Flysystem/PublicAdapter.php
+@@ -2,12 +2,12 @@
+ 
+ namespace SilverStripe\Assets\Flysystem;
+ 
+-use League\Flysystem\AdapterInterface;
++use League\Flysystem\FilesystemAdapter;
+ 
+ /**
+  * Represents an AbstractAdapter which exposes its assets via public urls
+  */
+-interface PublicAdapter extends AdapterInterface
++interface PublicAdapter extends FilesystemAdapter
+ {
+ 
+     /**
+diff --git a/src/Storage/FileHashingService.php b/src/Storage/FileHashingService.php
+index 09b48800..8ea3bd6c 100644
+--- a/src/Storage/FileHashingService.php
++++ b/src/Storage/FileHashingService.php
+@@ -2,7 +2,7 @@
+ 
+ namespace SilverStripe\Assets\Storage;
+ 
+-use League\Flysystem\FileNotFoundException;
++use League\Flysystem\UnableToCheckExistence;
+ use League\Flysystem\Filesystem;
+ 
+ /**
+@@ -27,7 +27,7 @@ public function computeFromStream($stream);
+      * @param string $fileID
+      * @param Filesystem|string $fs
+      * @return string
+-     * @throws FileNotFoundException
++     * @throws UnableToCheckExistence
+      */
+     public function computeFromFile($fileID, $fs);
+ 
+diff --git a/src/Storage/Sha1FileHashingService.php b/src/Storage/Sha1FileHashingService.php
+index ce3a95c1..ef8e0d83 100644
+--- a/src/Storage/Sha1FileHashingService.php
++++ b/src/Storage/Sha1FileHashingService.php
+@@ -4,8 +4,8 @@
+ 
+ use InvalidArgumentException;
+ use League\Flysystem\Filesystem;
+-use League\Flysystem\Util;
+ use Psr\SimpleCache\CacheInterface;
++use SilverStripe\Assets\Util;
+ use SilverStripe\Core\Config\Configurable;
+ use SilverStripe\Core\Flushable;
+ use SilverStripe\Core\Injector\Injectable;
+@@ -195,7 +195,7 @@ private function getTimestamp($fileID, $fs)
+     {
+         $filesystem = $this->getFilesystem($fs);
+         return $filesystem->has($fileID) ?
+-            $filesystem->getTimestamp($fileID) :
++            $filesystem->lastModified($fileID) :
+             DBDatetime::now()->getTimestamp();
+     }
+ 
+diff --git a/src/Util.php b/src/Util.php
+new file mode 100644
+index 00000000..53c7eb1e
+--- /dev/null
++++ b/src/Util.php
+@@ -0,0 +1,28 @@
++<?php
++
++namespace SilverStripe\Assets;
++
++class Util
++{
++    public static function rewindStream($resource): void
++    {
++        self::checkIsResource($resource);
++        if (ftell($resource) !== 0 && static::isSeekableStream($resource)) {
++            rewind($resource);
++        }
++    }
++
++    public static function isSeekableStream($resource): bool
++    {
++        self::checkIsResource($resource);
++
++        return stream_get_meta_data($resource)['seekable'];
++    }
++
++    private static function checkIsResource($resource): void
++    {
++        if (!is_resource($resource)) {
++            throw new \InvalidArgumentException('$resource argument is not a valid resource');
++        }
++    }
++}
+diff --git a/tests/php/Dev/Tasks/FileMigrationHelperTest.php b/tests/php/Dev/Tasks/FileMigrationHelperTest.php
+index 6f4000cc..a012594a 100644
+--- a/tests/php/Dev/Tasks/FileMigrationHelperTest.php
++++ b/tests/php/Dev/Tasks/FileMigrationHelperTest.php
+@@ -75,25 +75,25 @@ protected function setUp(): void
+         foreach (Image::get() as $file) {
+             $filename = $file->generateFilename();
+             rewind($fromMain);
+-            $fs->write($filename, $fromMain);
++            $fs->writeStream($filename, $fromMain);
+ 
+             $dir = dirname($filename ?? '');
+             $basename = basename($filename ?? '');
+ 
+             rewind($fromVariant);
+-            $fs->write($dir . '/_resampled/resizeXYZ/' . $basename, $fromVariant);
++            $fs->writeStream($dir . '/_resampled/resizeXYZ/' . $basename, $fromVariant);
+             rewind($fromVariant);
+-            $fs->write($dir . '/_resampled/resizeXYZ/scaleABC/' . $basename, $fromVariant);
++            $fs->writeStream($dir . '/_resampled/resizeXYZ/scaleABC/' . $basename, $fromVariant);
+             rewind($fromVariant);
+-            $fs->write($dir . '/_resampled/ScaleWidthWzEwMF0-' . $basename, $fromVariant);
++            $fs->writeStream($dir . '/_resampled/ScaleWidthWzEwMF0-' . $basename, $fromVariant);
+             rewind($fromVariant);
+-            $fs->write($dir . '/_resampled/ScaleWidthWzEwMF0-FitWzEwMCwxMDBd-' . $basename, $fromVariant);
++            $fs->writeStream($dir . '/_resampled/ScaleWidthWzEwMF0-FitWzEwMCwxMDBd-' . $basename, $fromVariant);
+         }
+         fclose($fromMain);
+         fclose($fromVariant);
+ 
+-        $fs->rename('wrong-case.txt', 'wRoNg-CaSe.tXt');
+-        $fs->rename('Uploads/good-case-bad-folder.txt', 'uploads/good-case-bad-folder.txt');
++        $fs->move('wrong-case.txt', 'wRoNg-CaSe.tXt');
++        $fs->move('Uploads/good-case-bad-folder.txt', 'uploads/good-case-bad-folder.txt');
+         $fs->copy('too-many-alternative-case.txt', 'Too-Many-Alternative-Case.txt');
+         $fs->copy('too-many-alternative-case.txt', 'Too-Many-Alternative-Case.TXT');
+         $fs->delete('too-many-alternative-case.txt');
+diff --git a/tests/php/Dev/Tasks/SecureAssetsMigrationHelperTest.php b/tests/php/Dev/Tasks/SecureAssetsMigrationHelperTest.php
+index f74c1bf6..40d4de32 100644
+--- a/tests/php/Dev/Tasks/SecureAssetsMigrationHelperTest.php
++++ b/tests/php/Dev/Tasks/SecureAssetsMigrationHelperTest.php
+@@ -112,7 +112,7 @@ public function dataMigrate()
+             ],
+             'Unprotected' => [
+                 'unprotected',
+-                null,
++                '',
+                 false
+             ],
+             'Protected with modified htaccess' => [
+diff --git a/tests/php/FilenameParsing/FileIDHelperResolutionStrategyTest.php b/tests/php/FilenameParsing/FileIDHelperResolutionStrategyTest.php
+index f396fd59..5e95c3f5 100644
+--- a/tests/php/FilenameParsing/FileIDHelperResolutionStrategyTest.php
++++ b/tests/php/FilenameParsing/FileIDHelperResolutionStrategyTest.php
+@@ -1,7 +1,6 @@
+ <?php
+ namespace SilverStripe\Assets\Tests\FilenameParsing;
+ 
+-use League\Flysystem\Adapter\Local;
+ use League\Flysystem\Filesystem;
+ use SilverStripe\Assets\Dev\TestAssetStore;
+ use SilverStripe\Assets\File;
+@@ -12,6 +11,7 @@
+ use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+ use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+ use SilverStripe\Assets\FilenameParsing\ParsedFileID;
++use SilverStripe\Assets\Flysystem\LocalFilesystemAdapter;
+ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
+ use SilverStripe\Assets\Storage\AssetStore;
+ use SilverStripe\Assets\Storage\FileHashingService;
+@@ -44,7 +44,7 @@ protected function setUp(): void
+         unlink($this->tmpFolder ?? '');
+ 
+         $this->fs = new Filesystem(
+-            new Local($this->tmpFolder)
++            new LocalFilesystemAdapter($this->tmpFolder)
+         );
+         Injector::inst()->registerService($this->fs, Filesystem::class . '.public');
+     }
+@@ -54,9 +54,9 @@ protected function tearDown(): void
+         TestAssetStore::reset();
+ 
+         // Clean up our temp adapter
+-        foreach ($this->fs->listContents() as $fileMeta) {
++        foreach ($this->fs->listContents('')->toArray() as $fileMeta) {
+             if ($fileMeta['type'] === 'dir') {
+-                $this->fs->deleteDir($fileMeta['path']);
++                $this->fs->deleteDirectory($fileMeta['path']);
+             } else {
+                 $this->fs->delete($fileMeta['path']);
+             }
+@@ -372,7 +372,7 @@ public function testSearchForTuple(FileIDHelperResolutionStrategy $strategy, $tu
+         $found = $strategy->searchForTuple($tuple, $this->fs, true);
+         $this->assertEquals($expected, $found->getFileID(), 'The file has been written');
+ 
+-        $this->fs->put($expected, 'the hash will change and will not match our tuple');
++        $this->fs->write($expected, 'the hash will change and will not match our tuple');
+ 
+         $found = $strategy->searchForTuple($tuple, $this->fs, false);
+         $this->assertEquals(
+@@ -434,8 +434,8 @@ public function testHashlessSearchForTuple()
+         $this->assertEquals($hash, $respPfID->getHash(), 'hash should have been read from main file');
+ 
+         // Looking for hash path of file NOT in DB
+-        $fs->rename($naturalPath, $hashPath);
+-        $fs->rename($variantNaturalPath, $variantHashPath);
++        $fs->move($naturalPath, $hashPath);
++        $fs->move($variantNaturalPath, $variantHashPath);
+         $this->assertNull($strategy->searchForTuple($pfID, $fs), 'strategy does not know in what folder to look');
+         $this->assertNull($strategy->searchForTuple($variantPfID, $fs), 'strategy does not know in what folder to look');
+ 
+@@ -523,9 +523,9 @@ public function testFindVariant($strategy, $tuple)
+         $this->fs->write('RootFile.txt', 'version 1');
+ 
+         $expectedPaths = [
+-            'Folder/FolderFile.pdf',
+             'Folder/FolderFile__mockedvariant.pdf',
+-            'Folder/SubFolder/SubFolderFile.pdf'
++            'Folder/FolderFile.pdf',
++            'Folder/SubFolder/SubFolderFile.pdf',
+         ];
+ 
+         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
+@@ -557,8 +557,8 @@ public function testFindHashlessVariant()
+         $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
+ 
+         $expectedPaths = [
+-            ['Folder/FolderFile.pdf', ''],
+-            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant']
++            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant'],
++            ['Folder/FolderFile.pdf', '']
+             // The hash path won't be match, because we're not providing a hash
+         ];
+ 
+diff --git a/tests/php/Flysystem/AssetAdapterTest.php b/tests/php/Flysystem/AssetAdapterTest.php
+index 910d858a..2206fadf 100644
+--- a/tests/php/Flysystem/AssetAdapterTest.php
++++ b/tests/php/Flysystem/AssetAdapterTest.php
+@@ -58,8 +58,7 @@ public function testPublicAdapter()
+         $this->assertFileExists($this->rootDir . '/.htaccess');
+         $this->assertFileDoesNotExist($this->rootDir . '/web.config');
+ 
+-        $htaccess = $adapter->read('.htaccess');
+-        $content = $htaccess['contents'];
++        $content = $adapter->read('.htaccess');
+         // Allowed extensions set
+         $this->assertStringContainsString('RewriteCond %{REQUEST_URI} !^[^.]*[^\/]*\.(?i:', $content);
+         foreach (File::getAllowedExtensions() as $extension) {
+@@ -74,7 +73,7 @@ public function testPublicAdapter()
+         file_put_contents($this->rootDir . '/.htaccess', '# broken content');
+         $adapter->flush();
+         $htaccess2 = $adapter->read('.htaccess');
+-        $this->assertEquals($content, $htaccess2['contents']);
++        $this->assertEquals($content, $htaccess2);
+ 
+         // Test URL
+         $this->assertEquals('/assets/AssetAdapterTest/file.jpg', $adapter->getPublicUrl('file.jpg'));
+diff --git a/tests/php/Flysystem/FlysystemAssetStoreTest.php b/tests/php/Flysystem/FlysystemAssetStoreTest.php
+index 76168cf6..029eb415 100644
+--- a/tests/php/Flysystem/FlysystemAssetStoreTest.php
++++ b/tests/php/Flysystem/FlysystemAssetStoreTest.php
+@@ -2,9 +2,9 @@
+ 
+ namespace SilverStripe\Assets\Tests\Flysystem;
+ 
+-use League\Flysystem\Filesystem;
+ use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+ use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
++use SilverStripe\Assets\Flysystem\Filesystem;
+ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
+ use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
+ use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
+@@ -49,7 +49,7 @@ protected function setUp(): void
+             ->getMock();
+ 
+         $this->publicFilesystem = $this->getMockBuilder(Filesystem::class)
+-            ->setMethods(['has', 'read', 'readStream', 'getTimestamp'])
++            ->setMethods(['has', 'read', 'readStream', 'lastModified'])
+             ->setConstructorArgs([$this->publicAdapter])
+             ->getMock();
+ 
+@@ -58,7 +58,7 @@ protected function setUp(): void
+             ->getMock();
+ 
+         $this->protectedFilesystem = $this->getMockBuilder(Filesystem::class)
+-            ->setMethods(['has', 'read', 'readStream', 'getTimestamp'])
++            ->setMethods(['has', 'read', 'readStream', 'lastModified'])
+             ->setConstructorArgs([$this->protectedAdapter])
+             ->getMock();
+ 
+diff --git a/tests/php/ProtectedFileControllerTest.php b/tests/php/ProtectedFileControllerTest.php
+index 0250b563..c4f0d6ec 100644
+--- a/tests/php/ProtectedFileControllerTest.php
++++ b/tests/php/ProtectedFileControllerTest.php
+@@ -349,7 +349,7 @@ protected function assertResponseEquals($code, $body, HTTPResponse $response)
+             // 'text/plain' for test case pdfs in php7.4 + 8.0 , though in php8.1 it will
+             // return 'application/octet-stream' which is then converted to 'application/pdf'
+             // based on the file extension
+-            $this->assertTrue(in_array($response->getHeader('Content-Type'), ['text/plain', 'application/pdf']));
++            $this->assertTrue(in_array($response->getHeader('Content-Type'), ['text/plain', 'application/pdf', 'application/octet-stream']));
+         } else {
+             $this->assertTrue($response->isError());
+         }
+diff --git a/tests/php/RedirectFileControllerTest.php b/tests/php/RedirectFileControllerTest.php
+index 5ff35abf..885e507a 100644
+--- a/tests/php/RedirectFileControllerTest.php
++++ b/tests/php/RedirectFileControllerTest.php
+@@ -141,7 +141,7 @@ public function testTemporaryFilenameRedirect($fixtureID)
+         // This replicates a scenario where a file was publish under a hash path in SilverStripe 4.3
+         $store = $this->getAssetStore();
+         $fs = $store->getPublicFilesystem();
+-        $fs->rename($naturalUrl, $hashUrl);
++        $fs->move($naturalUrl, $hashUrl);
+ 
+         $response = $this->get('assets/' . $naturalUrl);
+         $this->assertResponse(
+diff --git a/tests/php/Storage/AssetStoreTest.php b/tests/php/Storage/AssetStoreTest.php
+index ca36f9da..26e9c5bd 100644
+--- a/tests/php/Storage/AssetStoreTest.php
++++ b/tests/php/Storage/AssetStoreTest.php
+@@ -419,7 +419,7 @@ public function testGetMetadata()
+         );
+         $fishMeta = $backend->getMetadata($fishTuple['Filename'], $fishTuple['Hash']);
+         $this->assertEquals(151889, $fishMeta['size']);
+-        $this->assertEquals('file', $fishMeta['type']);
++        $this->assertEquals('image/jpeg', $fishMeta['type']);
+         $this->assertNotEmpty($fishMeta['timestamp']);
+ 
+         // text
+@@ -431,7 +431,7 @@ public function testGetMetadata()
+         );
+         $puppiesMeta = $backend->getMetadata($puppiesTuple['Filename'], $puppiesTuple['Hash']);
+         $this->assertEquals(7, $puppiesMeta['size']);
+-        $this->assertEquals('file', $puppiesMeta['type']);
++        $this->assertEquals('text/plain', $puppiesMeta['type']);
+         $this->assertNotEmpty($puppiesMeta['timestamp']);
+     }
+ 
+@@ -891,7 +891,7 @@ public function testVariantWriteNextToFile(
+             $variantParsedFileID->getVariant()
+         );
+ 
+-        $this->assertTrue($fs->has($expectedVariantPath));
++        $this->assertTrue($fs->fileExists($expectedVariantPath));
+     }
+ 
+     public function listOfFilesToNormalise()
+@@ -990,12 +990,12 @@ public function testNormalise($fsName, array $contents, $filename, $hash, array
+         $fs = $this->getFilesystem($fsName);
+ 
+         foreach ($expected as $expectedFile) {
+-            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
++            $this->assertTrue($fs->fileExists($expectedFile), "$expectedFile should exists");
+             $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+         }
+ 
+         foreach ($notExpected as $notExpectedFile) {
+-            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
++            $this->assertFalse($fs->fileExists($notExpectedFile), "$notExpectedFile should NOT exists");
+         }
+     }
+ 
+@@ -1131,12 +1131,12 @@ public function testNormalisePath(
+         $fs = $this->getFilesystem($fsName);
+ 
+         foreach ($expected as $expectedFile) {
+-            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
++            $this->assertTrue($fs->fileExists($expectedFile), "$expectedFile should exists");
+             $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+         }
+ 
+         foreach ($notExpected as $notExpectedFile) {
+-            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
++            $this->assertFalse($fs->fileExists($notExpectedFile), "$notExpectedFile should NOT exists");
+         }
+     }
+ 
+diff --git a/tests/php/Storage/Sha1FileHashingServiceTest.php b/tests/php/Storage/Sha1FileHashingServiceTest.php
+index 0c04b749..6417a1a8 100644
+--- a/tests/php/Storage/Sha1FileHashingServiceTest.php
++++ b/tests/php/Storage/Sha1FileHashingServiceTest.php
+@@ -2,23 +2,12 @@
+ 
+ namespace SilverStripe\Assets\Tests\Storage;
+ 
+-use Exception;
+-use InvalidArgumentException;
+-use League\Flysystem\FileNotFoundException;
+ use League\Flysystem\Filesystem;
++use League\Flysystem\UnableToReadFile;
+ use ReflectionMethod;
+-use Silverstripe\Assets\Dev\TestAssetStore;
+-use SilverStripe\Assets\File;
+-use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+-use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+-use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+-use SilverStripe\Assets\FilenameParsing\ParsedFileID;
+-use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
+ use SilverStripe\Assets\Storage\AssetStore;
+ use SilverStripe\Assets\Storage\FileHashingService;
+ use SilverStripe\Assets\Storage\Sha1FileHashingService;
+-use SilverStripe\Core\Config\Config;
+ use SilverStripe\Core\Injector\Injector;
+ use SilverStripe\Dev\SapphireTest;
+ use Symfony\Component\Cache\CacheItem;
+@@ -62,8 +51,8 @@ protected function setUp(): void
+     protected function tearDown(): void
+     {
+         parent::tearDown();
+-        $this->publicFs->deleteDir('Sha1FileHashingServiceTest');
+-        $this->protectedFs->deleteDir('Sha1FileHashingServiceTest');
++        $this->publicFs->deleteDirectory('Sha1FileHashingServiceTest');
++        $this->protectedFs->deleteDirectory('Sha1FileHashingServiceTest');
+     }
+ 
+     public function testComputeFromStream()
+@@ -103,7 +92,7 @@ public function testComputeFromFile()
+ 
+     public function testComputeMissingFile()
+     {
+-        $this->expectException(FileNotFoundException::class);
++        $this->expectException(UnableToReadFile::class);
+         $service = new Sha1FileHashingService();
+         $service->computeFromFile('missing-file.text', AssetStore::VISIBILITY_PROTECTED);
+     }
+@@ -150,7 +139,7 @@ public function testComputeTouchFile()
+         // Our timestamp is accruate to the second, we need to wait a bit to make sure our new timestamp won't be in
+         // the same second as the old one.
+         sleep(2);
+-        $this->publicFs->update($this->fileID, $this->protectedContent);
++        $this->publicFs->write($this->fileID, $this->protectedContent);
+ 
+         $this->assertEquals(
+             $this->protectedHash,
