@@ -1,0 +1,182 @@
+diff --git a/composer.json b/composer.json
+index bead9cb..ce3daf5 100644
+--- a/composer.json
++++ b/composer.json
+@@ -3,14 +3,14 @@
+     "description": "SilverStripe configuration based on YAML and class statics",
+     "license": "BSD-3-Clause",
+     "require": {
++        "php": "^7.4 || ^8.0",
+         "symfony/finder": "^3.4 || ^4.0",
+         "symfony/yaml": "^3.4 || ^4.0",
+         "marcj/topsort": "^1 || ^2",
+         "psr/simple-cache": "^1.0",
+-        "php": "^7.4 || ^8.0"
++        "silverstripe/framework": "^4.12"
+     },
+     "require-dev": {
+-        "silverstripe/framework": "^4.10",
+         "phpunit/phpunit": "^9.5",
+         "mikey179/vfsstream": "^1.6",
+         "squizlabs/php_codesniffer": "^3.5"
+diff --git a/src/Collections/DeltaConfigCollection.php b/src/Collections/DeltaConfigCollection.php
+index dcbeb0d..3f3eca0 100644
+--- a/src/Collections/DeltaConfigCollection.php
++++ b/src/Collections/DeltaConfigCollection.php
+@@ -270,6 +270,11 @@ function ($delta) use ($key) {
+      */
+     protected function addDelta($class, $delta)
+     {
++        if (is_array($delta['config'] ?? null)) {
++            foreach (array_keys($delta['config']) as $configKey) {
++                $this->checkForDeprecatedConfig($class, $configKey);
++            }
++        }
+         $classKey = strtolower($class ?? '');
+         if (!isset($this->deltas[$classKey])) {
+             $this->deltas[$classKey] = [];
+diff --git a/src/Collections/MemoryConfigCollection.php b/src/Collections/MemoryConfigCollection.php
+index 08befab..6f0fc97 100644
+--- a/src/Collections/MemoryConfigCollection.php
++++ b/src/Collections/MemoryConfigCollection.php
+@@ -82,6 +82,7 @@ public function set($class, $name, $data, $metadata = [])
+ 
+         $classKey = strtolower($class ?? '');
+         if ($name) {
++            $this->checkForDeprecatedConfig($classKey, $name);
+             if (!isset($this->config[$classKey])) {
+                 $this->config[$classKey] = [];
+             }
+@@ -106,11 +107,21 @@ public function get($class, $name = null, $excludeMiddleware = 0)
+ 
+         // Return either name, or whole-class config
+         if ($name) {
++            $this->checkForDeprecatedConfig($class, $name);
+             return isset($config[$name]) ? $config[$name] : null;
+         }
+         return $config;
+     }
+ 
++    public function checkForDeprecatedConfig($class, $name): void
++    {
++        $deprecated = $this->getClassConfig('__deprecated', true);
++        $data = $deprecated['config'][strtolower($class)][$name] ?? [];
++        if (!empty($data)) {
++            Deprecation::notice($data['version'], $data['message'], Deprecation::SCOPE_CONFIG);
++        }
++    }
++
+     /**
+      * Retrieve config for an entire class
+      *
+diff --git a/src/Transformer/PrivateStaticTransformer.php b/src/Transformer/PrivateStaticTransformer.php
+index a9fa09e..39b2d9d 100644
+--- a/src/Transformer/PrivateStaticTransformer.php
++++ b/src/Transformer/PrivateStaticTransformer.php
+@@ -49,6 +49,11 @@ public function transform(MutableConfigCollectionInterface $collection)
+ 
+             // Add the item to the collection
+             $collection->set($class, null, $item['value'], $item['metadata']);
++
++            // Save deprecated config to special __deprecated key
++            if (!empty($item['deprecated'])) {
++                $collection->merge('__deprecated', 'config', [strtolower($class) => $item['deprecated']]);
++            }
+         }
+ 
+         return $collection;
+@@ -69,6 +74,7 @@ protected function getClassConfig($class)
+         $props = $reflection->getProperties(ReflectionProperty::IS_STATIC);
+ 
+         $classConfig = [];
++        $deprecated = [];
+         foreach ($props as $prop) {
+             // Check if this property is configurable
+             if (!$this->isConfigProperty($prop)) {
+@@ -82,6 +88,13 @@ protected function getClassConfig($class)
+             if ($this->isConfigValue($value)) {
+                 $classConfig[$prop->getName()] = $value;
+             }
++
++            // Detect deprecated config
++            $docComment = $prop->getDocComment();
++            if (str_contains($docComment, '@deprecated')) {
++                $propName = $prop->getName();
++                $deprecated[$propName] = $this->getDeprecatedData($docComment, $class, $propName);
++            }
+         }
+ 
+         // Create the metadata for our new item
+@@ -91,7 +104,29 @@ protected function getClassConfig($class)
+             'transformer' => static::class
+         ];
+ 
+-        return ['value' => $classConfig, 'metadata' => $metadata];
++        return ['value' => $classConfig, 'metadata' => $metadata, 'deprecated' => $deprecated];
++    }
++
++    private function getDeprecatedData(string $docComment, string $class, string $propName): array
++    {
++        $message = "Config $class::$propName is deprecated.";
++        // $matches[2] will be an empty string in the case of `@deprecated 1.2.3`
++        if (preg_match("#@deprecated ([0-9\.:]+) *(.*)(\n|$)#", $docComment, $matches)) {
++            return [
++                'version' => $matches[1],
++                'message' => $this->prepareMessage($message, $matches[2]),
++            ];
++        }
++        preg_match("#@deprecated *(.*)(\n|$)#", $docComment, $matches);
++        return [
++            'version' => '1.0.0',
++            'message' => $this->prepareMessage($message, $matches[1]),
++        ];
++    }
++
++    private function prepareMessage(string $message, string $match): string
++    {
++        return trim($message . ' ' . rtrim(trim($match), '.') . '.');
+     }
+ 
+     /**
+diff --git a/src/Transformer/YamlTransformer.php b/src/Transformer/YamlTransformer.php
+index 10ec831..c8812f9 100644
+--- a/src/Transformer/YamlTransformer.php
++++ b/src/Transformer/YamlTransformer.php
+@@ -9,6 +9,7 @@
+ use MJS\TopSort\Implementations\ArraySort;
+ use Exception;
+ use Closure;
++use SilverStripe\Config\Collections\MemoryConfigCollection;
+ 
+ class YamlTransformer implements TransformerInterface
+ {
+@@ -104,6 +105,7 @@ public function transform(MutableConfigCollectionInterface $collection)
+ 
+         foreach ($documents as $document) {
+             if (!empty($document['content'])) {
++                $this->checkForDeprecatedConfig($document, $collection);
+                 // We prepare the meta data
+                 $metadata = $document['header'];
+                 $metadata['transformer'] = static::class;
+@@ -128,6 +130,21 @@ public function transform(MutableConfigCollectionInterface $collection)
+         return $collection;
+     }
+ 
++    private function checkForDeprecatedConfig(array $document, MutableConfigCollectionInterface $collection): void
++    {
++        if (!($collection instanceof MemoryConfigCollection)) {
++            return;
++        }
++        foreach ($document['content'] as $key => $value) {
++            if (!is_array($value)) {
++                continue;
++            }
++            foreach (array_keys($value) as $valueKey) {
++                $collection->checkForDeprecatedConfig($key, $valueKey);
++            }
++        }
++    }
++
+     /**
+      * This allows external rules to be added to only/except checks. Config is only
+      * supposed to be setup once, so adding rules is a one-way system. You cannot

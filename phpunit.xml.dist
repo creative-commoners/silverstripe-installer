@@ -31,6 +31,10 @@
             <directory>vendor/silverstripe/framework/tests/php/</directory>
         </testsuite>
 
+        <testsuite name="config">
+            <directory>vendor/silverstripe/config/tests/</directory>
+        </testsuite>
+
         <!-- other core components -->
         <testsuite name="core">
             <directory>vendor/silverstripe/assets/tests/php/</directory>

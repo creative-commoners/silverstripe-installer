@@ -1,0 +1,349 @@
+diff --git a/src/Dev/Deprecation.php b/src/Dev/Deprecation.php
+index 5a222100e75..d8b10a3fd17 100644
+--- a/src/Dev/Deprecation.php
++++ b/src/Dev/Deprecation.php
+@@ -3,7 +3,6 @@
+ namespace SilverStripe\Dev;
+ 
+ use BadMethodCallException;
+-use Exception;
+ use SilverStripe\Control\Director;
+ use SilverStripe\Core\Environment;
+ use SilverStripe\Core\Injector\InjectorLoader;
+@@ -41,6 +40,7 @@ class Deprecation
+     const SCOPE_METHOD = 1;
+     const SCOPE_CLASS = 2;
+     const SCOPE_GLOBAL = 4;
++    const SCOPE_CONFIG = 8;
+ 
+     /**
+      * @var string
+@@ -67,8 +67,18 @@ class Deprecation
+      * must be available before this to avoid infinite loops.
+      *
+      * This will be overriden by the SS_DEPRECATION_ENABLED environment if present
++     *
++     * @internal - Marked as internal so this and other private static's are not treated as config
++     */
++    private static bool $is_enabled = false;
++
++    /**
++     * Used to cache the value of get_is_enabled() so that there are no repeated calls to methods
++     * such as Director::isDev()
++     *
++     * @internal
+      */
+-    protected static bool $is_enabled = false;
++    private static ?bool $cached_is_enabled = null;
+ 
+     /**
+      * @var array
+@@ -76,20 +86,34 @@ class Deprecation
+      */
+     protected static $module_version_overrides = [];
+ 
+-    protected static bool $inside_notice = false;
++    /**
++     * @internal
++     */
++    private static bool $inside_notice = false;
+ 
+     /**
+-     * Switched out by unit-testing to E_USER_NOTICE because E_USER_DEPRECATED is not
+-     * caught by $this->expectDeprecated() by default
+-     * https://github.com/laminas/laminas-di/pull/30#issuecomment-927585210
++     * Buffer of user_errors to be raised when enabled() is called
++     *
++     * This is used when setting deprecated config via yaml, before Deprecation::enable() has been called in _config.php
++     * Deprecated config set via yaml will only be shown in the browser when using ?flush=1
++     * It will not show in CLI when running dev/build flush=1
+      *
+-     * @var int
++     * @internal
++     */
++    private static array $user_error_message_buffer = [];
++
++    /**
++     * @deprecated 4.12.0 Will be removed without equivalent functionality to replace it
+      */
+     public static $notice_level = E_USER_DEPRECATED;
+ 
+     public static function enable(): void
+     {
+         static::$is_enabled = true;
++        foreach (self::$user_error_message_buffer as $message) {
++            user_error($message, E_USER_DEPRECATED);
++        }
++        self::$user_error_message_buffer = [];
+     }
+ 
+     public static function disable(): void
+@@ -164,12 +188,17 @@ public static function get_enabled()
+ 
+     private static function get_is_enabled(): bool
+     {
++        if (!is_null(self::$cached_is_enabled)) {
++            return self::$cached_is_enabled;
++        }
+         if (!Director::isDev()) {
++            self::$cached_is_enabled = false;
+             return false;
+-        }
+-        if (Environment::getEnv('SS_DEPRECATION_ENABLED')) {
++        } elseif (Environment::getEnv('SS_DEPRECATION_ENABLED')) {
++            self::$cached_is_enabled = true;
+             return true;
+         }
++        // Do not cache $is_enabled, allow it to be changed dynamically in project code
+         return static::$is_enabled;
+     }
+ 
+@@ -202,40 +231,44 @@ public static function notice($atVersion, $string = '', $scope = Deprecation::SC
+         // try block needs to wrap all code in case anything inside the try block
+         // calls something else that calls Deprecation::notice()
+         try {
+-            if (!self::get_is_enabled()) {
+-                return;
+-            }
+-
+-            // If you pass #.#, assume #.#.0
+-            if (preg_match('/^[0-9]+\.[0-9]+$/', $atVersion ?? '')) {
+-                $atVersion .= '.0';
+-            }
+-
+-            // Getting a backtrace is slow, so we only do it if we need it
+-            $backtrace = null;
+-
+-            // Get the calling scope
+-            if ($scope == Deprecation::SCOPE_METHOD) {
+-                $backtrace = debug_backtrace(0);
+-                $caller = self::get_called_method_from_trace($backtrace);
+-            } elseif ($scope == Deprecation::SCOPE_CLASS) {
+-                $backtrace = debug_backtrace(0);
+-                $caller = isset($backtrace[1]['class']) ? $backtrace[1]['class'] : '(unknown)';
++            if ($scope === self::SCOPE_CONFIG) {
++                if (self::get_is_enabled()) {
++                    user_error($string, E_USER_DEPRECATED);
++                } else {
++                    self::$user_error_message_buffer[] = $string;
++                }
+             } else {
+-                $caller = false;
+-            }
++                if (!self::get_is_enabled()) {
++                    // Do not add to self::$user_error_message_buffer, as the backtrace is too expensive
++                    return;
++                }
++    
++                // Getting a backtrace is slow, so we only do it if we need it
++                $backtrace = null;
++    
++                // Get the calling scope
++                if ($scope == Deprecation::SCOPE_METHOD) {
++                    $backtrace = debug_backtrace(0);
++                    $caller = self::get_called_method_from_trace($backtrace);
++                } elseif ($scope == Deprecation::SCOPE_CLASS) {
++                    $backtrace = debug_backtrace(0);
++                    $caller = isset($backtrace[1]['class']) ? $backtrace[1]['class'] : '(unknown)';
++                } else {
++                    $caller = false;
++                }
++    
++                // Then raise the notice
++                if (substr($string, -1) != '.') {
++                    $string .= ".";
++                }
+ 
+-            // Then raise the notice
+-            if (substr($string, -1) != '.') {
+-                $string .= ".";
+-            }
+-
+-            $string .= " Called from " . self::get_called_method_from_trace($backtrace, 2) . '.';
++                $string .= " Called from " . self::get_called_method_from_trace($backtrace, 2) . '.';
+ 
+-            if ($caller) {
+-                user_error($caller . ' is deprecated.' . ($string ? ' ' . $string : ''), self::$notice_level);
+-            } else {
+-                user_error($string, self::$notice_level);
++                if ($caller) {
++                    user_error($caller . ' is deprecated.' . ($string ? ' ' . $string : ''), E_USER_DEPRECATED);
++                } else {
++                    user_error($string, E_USER_DEPRECATED);
++                }
+             }
+         } catch (BadMethodCallException $e) {
+             if ($e->getMessage() === InjectorLoader::NO_MANIFESTS_AVAILABLE) {
+diff --git a/tests/php/Dev/DeprecationTest.php b/tests/php/Dev/DeprecationTest.php
+index 48b99a2fa82..d24843deb60 100644
+--- a/tests/php/Dev/DeprecationTest.php
++++ b/tests/php/Dev/DeprecationTest.php
+@@ -2,16 +2,40 @@
+ 
+ namespace SilverStripe\Dev\Tests;
+ 
++use PHPUnit\Framework\Error\Deprecated;
++use SilverStripe\Core\Config\Config;
+ use SilverStripe\Dev\Deprecation;
+ use SilverStripe\Dev\SapphireTest;
+-use SilverStripe\Dev\Tests\DeprecationTest\TestDeprecation;
++use SilverStripe\Dev\Tests\DeprecationTest\DeprecationTestObject;
+ 
+ class DeprecationTest extends SapphireTest
+ {
++    protected static $extra_dataobjects = [
++        DeprecationTestObject::class,
++    ];
++
++    private $oldHandler;
++
++    protected function setup(): void
++    {
++        // Use custom error handler for two reasons:
++        // - Filter out errors for deprecated class properities unrelated to this unit test
++        // - Allow the use of expectDeprecation(), which doesn't work with E_USER_DEPRECATION by default
++        //   https://github.com/laminas/laminas-di/pull/30#issuecomment-927585210
++        $this->oldHandler = set_error_handler(function ($errno, $errstr) {
++            if (str_contains($errstr, 'SilverStripe\\Dev\\Tests\\DeprecationTest')) {
++                throw new Deprecated($errstr, $errno, '', 1);
++            } else {
++                // noop
++            }
++        }, E_USER_DEPRECATED);
++        parent::setup();
++    }
++
+     protected function tearDown(): void
+     {
+-        Deprecation::$notice_level = E_USER_DEPRECATED;
+         Deprecation::disable();
++        set_error_handler($this->oldHandler);
+         parent::tearDown();
+     }
+ 
+@@ -22,9 +46,8 @@ public function testNotice()
+             'My message.',
+             'Called from PHPUnit\Framework\TestCase->runTest.'
+         ]);
+-        $this->expectError();
+-        $this->expectErrorMessage($message);
+-        Deprecation::$notice_level = E_USER_NOTICE;
++        $this->expectDeprecation();
++        $this->expectDeprecationMessage($message);
+         Deprecation::enable();
+         Deprecation::notice('1.2.3', 'My message');
+     }
+@@ -34,8 +57,71 @@ public function testNotice()
+      */
+     public function testDisabled()
+     {
+-        Deprecation::$notice_level = E_USER_NOTICE;
+         // test that no error error is raised because by default Deprecation is disabled
+         Deprecation::notice('4.5.6', 'My message');
+     }
++
++    // The following tests would be better to put in the silverstripe/config module, however this is not
++    // possible to do in a clean way as the config for the DeprecationTestObject will not load if it
++    // is inside the silverstripe/config directory, as there is no _config.php file or _config folder.
++    // Adding a _config.php file will break existing unit-tests within silverstripe/config
++    // It is possible to put DeprecationTestObject in framework and the unit tests in config, however
++    // that's probably messier then just having everything within framework
++
++    public function testConfigGetFirst()
++    {
++        $message = implode(' ', [
++            'Config SilverStripe\Dev\Tests\DeprecationTest\DeprecationTestObject::first_config is deprecated.',
++            'My first config message.'
++        ]);
++        $this->expectDeprecation();
++        $this->expectDeprecationMessage($message);
++        Deprecation::enable();
++        Config::inst()->get(DeprecationTestObject::class, 'first_config');
++    }
++
++    public function testConfigGetSecond()
++    {
++        $message = implode(' ', [
++            'Config SilverStripe\Dev\Tests\DeprecationTest\DeprecationTestObject::second_config is deprecated.',
++            'My second config message.'
++        ]);
++        $this->expectDeprecation();
++        $this->expectDeprecationMessage($message);
++        Deprecation::enable();
++        Config::inst()->get(DeprecationTestObject::class, 'second_config');
++    }
++
++    public function testConfigGetThird()
++    {
++        $message = 'Config SilverStripe\Dev\Tests\DeprecationTest\DeprecationTestObject::third_config is deprecated.';
++        $this->expectDeprecation();
++        $this->expectDeprecationMessage($message);
++        Deprecation::enable();
++        Config::inst()->get(DeprecationTestObject::class, 'third_config');
++    }
++
++    public function testConfigSet()
++    {
++        $message = implode(' ', [
++            'Config SilverStripe\Dev\Tests\DeprecationTest\DeprecationTestObject::first_config is deprecated.',
++            'My first config message.'
++        ]);
++        $this->expectDeprecation();
++        $this->expectDeprecationMessage($message);
++        Deprecation::enable();
++        Config::modify()->set(DeprecationTestObject::class, 'first_config', 'abc');
++    }
++
++    public function testConfigMerge()
++    {
++        $message = implode(' ', [
++            'Config SilverStripe\Dev\Tests\DeprecationTest\DeprecationTestObject::array_config is deprecated.',
++            'My array config message.'
++        ]);
++        $this->expectDeprecation();
++        $this->expectDeprecationMessage($message);
++        Deprecation::enable();
++        Config::modify()->merge(DeprecationTestObject::class, 'array_config', ['abc']);
++    }
+ }
+diff --git a/tests/php/Dev/DeprecationTest/DeprecationTestObject.php b/tests/php/Dev/DeprecationTest/DeprecationTestObject.php
+new file mode 100644
+index 00000000000..c16a8371033
+--- /dev/null
++++ b/tests/php/Dev/DeprecationTest/DeprecationTestObject.php
+@@ -0,0 +1,35 @@
++<?php
++
++namespace SilverStripe\Dev\Tests\DeprecationTest;
++
++use SilverStripe\Dev\TestOnly;
++use SilverStripe\ORM\DataObject;
++
++class DeprecationTestObject extends DataObject implements TestOnly
++{
++    private static $db = [
++        "Name" => "Varchar"
++    ];
++
++    private static $table_name = 'DeprecatedTestObject';
++
++    /**
++     * @deprecated 1.2.3 My first config message
++     */
++    private static $first_config = 'ABC';
++
++    /**
++     * @deprecated My second config message
++     */
++    private static $second_config = 'DEF';
++
++    /**
++     * @deprecated
++     */
++    private static $third_config = 'XYZ';
++
++    /**
++     * @deprecated 1.2.3 My array config message
++     */
++    private static $array_config = ['lorem', 'ipsum'];
++}
