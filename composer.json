@@ -8,8 +8,9 @@
         "silverstripe/recipe-cms": "5.x-dev",
         "silverstripe-themes/simple": "~3.2.0",
         "silverstripe/login-forms": "5.x-dev",
-        "emteknetnz/vendor-code-patcher": "^0.2.9",
-        "league/flysystem": "3.9.0 as 1.1.9"
+        "league/flysystem": "3.9.0 as 1.1.9",
+        "silverstripe/assets": "dev-pulls/2/upgrade-installer-deps#0c64d541420a6213f348a733d5a5958ba0083ced as 2.x-dev"
+
     },
     "require-dev": {
         "silverstripe/recipe-testing": "^3",
@@ -36,5 +37,11 @@
         }
     },
     "prefer-stable": true,
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/creative-commoners/silverstripe-assets.git"
+        }
+      ]
 }
