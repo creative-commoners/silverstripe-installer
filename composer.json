@@ -7,12 +7,19 @@
         "silverstripe/recipe-plugin": "^2",
         "silverstripe/recipe-cms": "5.x-dev",
         "silverstripe-themes/simple": "~3.2.0",
-        "silverstripe/login-forms": "5.x-dev"
+        "silverstripe/login-forms": "5.x-dev",
+        "silverstripe/framework": "dev-pulls/5/php82 as 5.x-dev"
     },
     "require-dev": {
         "silverstripe/recipe-testing": "^3",
         "silverstripe/frameworktest": "^1",
         "mikey179/vfsstream": "^1.6.10"
+    },
+    "repositories": {
+        "x1": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-framework"
+        }
     },
     "extra": {
         "project-files": [
@@ -31,6 +38,9 @@
             "composer/installers": true,
             "silverstripe/recipe-plugin": true,
             "silverstripe/vendor-plugin": true
+        },
+        "platform": {
+            "php": "8.2"
         }
     },
     "prefer-stable": true,

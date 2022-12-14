@@ -15,15 +15,29 @@ jobs:
     if: (github.event_name == 'schedule' && github.repository_owner == 'silverstripe') || (github.event_name != 'schedule')
     uses: silverstripe/gha-ci/.github/workflows/ci.yml@v1
     with:
-      # installer contains a sample behat.yml file, though there are no behat tests to run
-      endtoend: false
+      composer_install: true
+      dynamic_matrix: false
       extra_jobs: |
-        - endtoend: true
-          endtoend_suite: admin
-          endtoend_config: vendor/silverstripe/admin/behat.yml
-        - endtoend: true
-          endtoend_suite: asset-admin
-          endtoend_config: vendor/silverstripe/asset-admin/behat.yml
-        - endtoend: true
-          endtoend_suite: cms
-          endtoend_config: vendor/silverstripe/cms/behat.yml
+        - php: '8.2'
+          db: mysql
+          phpunit: true
+          phpunit_suite: framework
+        - php: '8.2'
+          db: mysql
+          phpunit: true
+          phpunit_suite: core
+        - php: '8.2'
+          db: mysql
+          phpunit: true
+          phpunit_suite: admin
+      # endtoend is current globally broken, enable once that's working again
+      # extra_jobs: |
+      #   - endtoend: true
+      #     endtoend_suite: admin
+      #     endtoend_config: vendor/silverstripe/admin/behat.yml
+      #   - endtoend: true
+      #     endtoend_suite: asset-admin
+      #     endtoend_config: vendor/silverstripe/asset-admin/behat.yml
+      #   - endtoend: true
+      #     endtoend_suite: cms
+      #     endtoend_config: vendor/silverstripe/cms/behat.yml
