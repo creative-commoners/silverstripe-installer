@@ -3317,12 +3317,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-versioned.git",
-                "reference": "a172446a8761eb793254d594be6e6ef1b124830f"
+                "reference": "1054fe2a495dc91985a778e12cde9b8df1ec49aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-versioned/zipball/a172446a8761eb793254d594be6e6ef1b124830f",
-                "reference": "a172446a8761eb793254d594be6e6ef1b124830f",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-versioned/zipball/1054fe2a495dc91985a778e12cde9b8df1ec49aa",
+                "reference": "1054fe2a495dc91985a778e12cde9b8df1ec49aa",
                 "shasum": ""
             },
             "require": {
@@ -3376,7 +3376,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-versioned/tree/pulls/2/php82"
             },
-            "time": "2022-12-14T22:28:58+00:00"
+            "time": "2022-12-14T23:16:22+00:00"
         },
         {
             "name": "silverstripe/versioned-admin",
