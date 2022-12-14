@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e7b96b111fb06746fd194c797893bdec",
+    "content-hash": "4d33d81383024ed1f692c9a97499ea63",
     "packages": [
         {
             "name": "bramus/ansi-php",
@@ -3313,16 +3313,16 @@
         },
         {
             "name": "silverstripe/versioned",
-            "version": "2.x-dev",
+            "version": "dev-pulls/2/php82",
             "source": {
                 "type": "git",
-                "url": "https://github.com/silverstripe/silverstripe-versioned.git",
-                "reference": "561275bc110790aa25d670cf52d9ded90940cee8"
+                "url": "https://github.com/creative-commoners/silverstripe-versioned.git",
+                "reference": "a172446a8761eb793254d594be6e6ef1b124830f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/silverstripe-versioned/zipball/561275bc110790aa25d670cf52d9ded90940cee8",
-                "reference": "561275bc110790aa25d670cf52d9ded90940cee8",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-versioned/zipball/a172446a8761eb793254d594be6e6ef1b124830f",
+                "reference": "a172446a8761eb793254d594be6e6ef1b124830f",
                 "shasum": ""
             },
             "require": {
@@ -3346,7 +3346,14 @@
                     "SilverStripe\\Versioned\\Tests\\": "tests/php/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "lint": [
+                    "vendor/bin/phpcs src/ tests/php/"
+                ],
+                "lint-clean": [
+                    "vendor/bin/phpcbf src/ tests/php/"
+                ]
+            },
             "license": [
                 "BSD-3-Clause"
             ],
@@ -3367,10 +3374,9 @@
                 "versioned"
             ],
             "support": {
-                "issues": "https://github.com/silverstripe/silverstripe-versioned/issues",
-                "source": "https://github.com/silverstripe/silverstripe-versioned/tree/2"
+                "source": "https://github.com/creative-commoners/silverstripe-versioned/tree/pulls/2/php82"
             },
-            "time": "2022-12-07T21:45:06+00:00"
+            "time": "2022-12-14T22:28:58+00:00"
         },
         {
             "name": "silverstripe/versioned-admin",
@@ -8396,13 +8402,20 @@
             "version": "dev-pulls/5/php82",
             "alias": "5.x-dev",
             "alias_normalized": "5.9999999.9999999.9999999-dev"
+        },
+        {
+            "package": "silverstripe/versioned",
+            "version": "dev-pulls/2/php82",
+            "alias": "2.x-dev",
+            "alias_normalized": "2.9999999.9999999.9999999-dev"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
         "silverstripe/recipe-cms": 20,
         "silverstripe/login-forms": 20,
-        "silverstripe/framework": 20
+        "silverstripe/framework": 20,
+        "silverstripe/versioned": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
