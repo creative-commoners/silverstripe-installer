@@ -9,7 +9,6 @@
         "silverstripe-themes/simple": "~3.2.0",
         "silverstripe/login-forms": "5.x-dev",
         "silverstripe/framework": "dev-pulls/5/php82 as 5.x-dev",
-        "silverstripe/versioned": "dev-pulls/2/php82 as 2.x-dev",
         "silverstripe/assets": "dev-pulls/2/php82 as 2.x-dev"
     },
     "require-dev": {
@@ -21,10 +20,6 @@
         "x1": {
             "type": "vcs",
             "url": "git@github.com:creative-commoners/silverstripe-framework"
-        },
-        "x2": {
-            "type": "vcs",
-            "url": "git@github.com:creative-commoners/silverstripe-versioned"
         },
         "x3": {
             "type": "vcs",

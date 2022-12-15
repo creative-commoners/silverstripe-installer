@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "344560f2abd77f685a4666e5b00ff54d",
+    "content-hash": "4b180f6add7dc779cc12e8b6ba174ea7",
     "packages": [
         {
             "name": "bramus/ansi-php",
@@ -2636,12 +2636,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-framework.git",
-                "reference": "f7811eca6fea83d6010fea5fd5167f134f28d3af"
+                "reference": "21bb75cb8629ab227ab97fcb3618ddbf6e95b333"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/f7811eca6fea83d6010fea5fd5167f134f28d3af",
-                "reference": "f7811eca6fea83d6010fea5fd5167f134f28d3af",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/21bb75cb8629ab227ab97fcb3618ddbf6e95b333",
+                "reference": "21bb75cb8629ab227ab97fcb3618ddbf6e95b333",
                 "shasum": ""
             },
             "require": {
@@ -2762,7 +2762,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-framework/tree/pulls/5/php82"
             },
-            "time": "2022-12-15T04:21:04+00:00"
+            "time": "2022-12-15T22:44:12+00:00"
         },
         {
             "name": "silverstripe/graphql",
@@ -2933,12 +2933,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silverstripe/recipe-cms.git",
-                "reference": "76b312bb4241a529dadd4a32f98b1e9aaf0e7503"
+                "reference": "7bae3fb781d8633f6a24437eefc623f1dd4490f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/recipe-cms/zipball/76b312bb4241a529dadd4a32f98b1e9aaf0e7503",
-                "reference": "76b312bb4241a529dadd4a32f98b1e9aaf0e7503",
+                "url": "https://api.github.com/repos/silverstripe/recipe-cms/zipball/7bae3fb781d8633f6a24437eefc623f1dd4490f3",
+                "reference": "7bae3fb781d8633f6a24437eefc623f1dd4490f3",
                 "shasum": ""
             },
             "require": {
@@ -2976,7 +2976,7 @@
                 "issues": "https://github.com/silverstripe/recipe-cms/issues",
                 "source": "https://github.com/silverstripe/recipe-cms/tree/5"
             },
-            "time": "2022-08-08T22:06:53+00:00"
+            "time": "2022-12-15T21:06:31+00:00"
         },
         {
             "name": "silverstripe/recipe-core",
@@ -2984,12 +2984,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silverstripe/recipe-core.git",
-                "reference": "a6f4b57ecab8b56a065c8a30c2b844393c582151"
+                "reference": "9745b0da2e7048a71172551e7ae558e750a12093"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/recipe-core/zipball/a6f4b57ecab8b56a065c8a30c2b844393c582151",
-                "reference": "a6f4b57ecab8b56a065c8a30c2b844393c582151",
+                "url": "https://api.github.com/repos/silverstripe/recipe-core/zipball/9745b0da2e7048a71172551e7ae558e750a12093",
+                "reference": "9745b0da2e7048a71172551e7ae558e750a12093",
                 "shasum": ""
             },
             "require": {
@@ -3008,6 +3008,7 @@
             "type": "silverstripe-recipe",
             "extra": {
                 "project-files": [
+                    ".htaccess",
                     "app/*"
                 ],
                 "public-files": [
@@ -3026,7 +3027,7 @@
                 "issues": "https://github.com/silverstripe/recipe-core/issues",
                 "source": "https://github.com/silverstripe/recipe-core/tree/5"
             },
-            "time": "2022-08-09T22:41:19+00:00"
+            "time": "2022-12-15T21:06:25+00:00"
         },
         {
             "name": "silverstripe/recipe-plugin",
@@ -3319,16 +3320,16 @@
         },
         {
             "name": "silverstripe/versioned",
-            "version": "dev-pulls/2/php82",
+            "version": "2.x-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/creative-commoners/silverstripe-versioned.git",
-                "reference": "20e681d721bc83c844f35eb75cc4f9e6cdb89d63"
+                "url": "https://github.com/silverstripe/silverstripe-versioned.git",
+                "reference": "05429a1384d9a3fa863bbc0263b74fb5678b5f7d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-versioned/zipball/20e681d721bc83c844f35eb75cc4f9e6cdb89d63",
-                "reference": "20e681d721bc83c844f35eb75cc4f9e6cdb89d63",
+                "url": "https://api.github.com/repos/silverstripe/silverstripe-versioned/zipball/05429a1384d9a3fa863bbc0263b74fb5678b5f7d",
+                "reference": "05429a1384d9a3fa863bbc0263b74fb5678b5f7d",
                 "shasum": ""
             },
             "require": {
@@ -3352,14 +3353,7 @@
                     "SilverStripe\\Versioned\\Tests\\": "tests/php/"
                 }
             },
-            "scripts": {
-                "lint": [
-                    "vendor/bin/phpcs src/ tests/php/"
-                ],
-                "lint-clean": [
-                    "vendor/bin/phpcbf src/ tests/php/"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "BSD-3-Clause"
             ],
@@ -3380,9 +3374,10 @@
                 "versioned"
             ],
             "support": {
-                "source": "https://github.com/creative-commoners/silverstripe-versioned/tree/pulls/2/php82"
+                "issues": "https://github.com/silverstripe/silverstripe-versioned/issues",
+                "source": "https://github.com/silverstripe/silverstripe-versioned/tree/2"
             },
-            "time": "2022-12-15T04:31:09+00:00"
+            "time": "2022-12-15T06:31:04+00:00"
         },
         {
             "name": "silverstripe/versioned-admin",
@@ -8414,12 +8409,6 @@
             "version": "dev-pulls/5/php82",
             "alias": "5.x-dev",
             "alias_normalized": "5.9999999.9999999.9999999-dev"
-        },
-        {
-            "package": "silverstripe/versioned",
-            "version": "dev-pulls/2/php82",
-            "alias": "2.x-dev",
-            "alias_normalized": "2.9999999.9999999.9999999-dev"
         }
     ],
     "minimum-stability": "dev",
@@ -8427,7 +8416,6 @@
         "silverstripe/recipe-cms": 20,
         "silverstripe/login-forms": 20,
         "silverstripe/framework": 20,
-        "silverstripe/versioned": 20,
         "silverstripe/assets": 20
     },
     "prefer-stable": true,
