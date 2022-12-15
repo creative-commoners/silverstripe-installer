@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d33d81383024ed1f692c9a97499ea63",
+    "content-hash": "344560f2abd77f685a4666e5b00ff54d",
     "packages": [
         {
             "name": "bramus/ansi-php",
@@ -2268,16 +2268,16 @@
         },
         {
             "name": "silverstripe/assets",
-            "version": "2.x-dev",
+            "version": "dev-pulls/2/php82",
             "source": {
                 "type": "git",
-                "url": "https://github.com/silverstripe/silverstripe-assets.git",
-                "reference": "04234faf0570ee70cd4a00258887bd177961ac5a"
+                "url": "https://github.com/creative-commoners/silverstripe-assets.git",
+                "reference": "20ed19cdc3c39acae2b4d242ea3a6d0d480399df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/silverstripe-assets/zipball/04234faf0570ee70cd4a00258887bd177961ac5a",
-                "reference": "04234faf0570ee70cd4a00258887bd177961ac5a",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-assets/zipball/20ed19cdc3c39acae2b4d242ea3a6d0d480399df",
+                "reference": "20ed19cdc3c39acae2b4d242ea3a6d0d480399df",
                 "shasum": ""
             },
             "require": {
@@ -2307,7 +2307,14 @@
                     "SilverStripe\\Assets\\Tests\\": "tests/php/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "lint": [
+                    "phpcs src/ tests/php/"
+                ],
+                "lint-clean": [
+                    "phpcbf src/ tests/php/"
+                ]
+            },
             "license": [
                 "BSD-3-Clause"
             ],
@@ -2328,10 +2335,9 @@
                 "silverstripe"
             ],
             "support": {
-                "issues": "https://github.com/silverstripe/silverstripe-assets/issues",
-                "source": "https://github.com/silverstripe/silverstripe-assets/tree/2"
+                "source": "https://github.com/creative-commoners/silverstripe-assets/tree/pulls/2/php82"
             },
-            "time": "2022-12-14T03:11:49+00:00"
+            "time": "2022-12-15T03:40:23+00:00"
         },
         {
             "name": "silverstripe/campaign-admin",
@@ -2630,12 +2636,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-framework.git",
-                "reference": "69ae1f4ef8ddf7031d4d2067f1b62a246cd825d9"
+                "reference": "f7811eca6fea83d6010fea5fd5167f134f28d3af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/69ae1f4ef8ddf7031d4d2067f1b62a246cd825d9",
-                "reference": "69ae1f4ef8ddf7031d4d2067f1b62a246cd825d9",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/f7811eca6fea83d6010fea5fd5167f134f28d3af",
+                "reference": "f7811eca6fea83d6010fea5fd5167f134f28d3af",
                 "shasum": ""
             },
             "require": {
@@ -2756,7 +2762,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-framework/tree/pulls/5/php82"
             },
-            "time": "2022-12-15T01:21:29+00:00"
+            "time": "2022-12-15T04:21:04+00:00"
         },
         {
             "name": "silverstripe/graphql",
@@ -3317,12 +3323,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-versioned.git",
-                "reference": "1054fe2a495dc91985a778e12cde9b8df1ec49aa"
+                "reference": "20e681d721bc83c844f35eb75cc4f9e6cdb89d63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-versioned/zipball/1054fe2a495dc91985a778e12cde9b8df1ec49aa",
-                "reference": "1054fe2a495dc91985a778e12cde9b8df1ec49aa",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-versioned/zipball/20e681d721bc83c844f35eb75cc4f9e6cdb89d63",
+                "reference": "20e681d721bc83c844f35eb75cc4f9e6cdb89d63",
                 "shasum": ""
             },
             "require": {
@@ -3376,7 +3382,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-versioned/tree/pulls/2/php82"
             },
-            "time": "2022-12-14T23:16:22+00:00"
+            "time": "2022-12-15T04:31:09+00:00"
         },
         {
             "name": "silverstripe/versioned-admin",
@@ -8398,6 +8404,12 @@
     ],
     "aliases": [
         {
+            "package": "silverstripe/assets",
+            "version": "dev-pulls/2/php82",
+            "alias": "2.x-dev",
+            "alias_normalized": "2.9999999.9999999.9999999-dev"
+        },
+        {
             "package": "silverstripe/framework",
             "version": "dev-pulls/5/php82",
             "alias": "5.x-dev",
@@ -8415,7 +8427,8 @@
         "silverstripe/recipe-cms": 20,
         "silverstripe/login-forms": 20,
         "silverstripe/framework": 20,
-        "silverstripe/versioned": 20
+        "silverstripe/versioned": 20,
+        "silverstripe/assets": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
