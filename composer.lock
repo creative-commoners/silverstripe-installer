@@ -2636,12 +2636,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-framework.git",
-                "reference": "21bb75cb8629ab227ab97fcb3618ddbf6e95b333"
+                "reference": "ede27f0a5fb676e418b016ea251fa0e14cc20e36"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/21bb75cb8629ab227ab97fcb3618ddbf6e95b333",
-                "reference": "21bb75cb8629ab227ab97fcb3618ddbf6e95b333",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/ede27f0a5fb676e418b016ea251fa0e14cc20e36",
+                "reference": "ede27f0a5fb676e418b016ea251fa0e14cc20e36",
                 "shasum": ""
             },
             "require": {
@@ -2762,7 +2762,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-framework/tree/pulls/5/php82"
             },
-            "time": "2022-12-15T22:44:12+00:00"
+            "time": "2022-12-16T07:09:04+00:00"
         },
         {
             "name": "silverstripe/graphql",
