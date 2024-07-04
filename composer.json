@@ -15,6 +15,7 @@
         "silverstripe/admin": "dev-pulls/2/always-inline-submit-elements as 2.x-dev",
         "dnadesign/silverstripe-elemental": "dev-pulls/5/always-inline-submit-elements as 5.x-dev",
         "silverstripe/developer-docs": "dev-pulls/5/elemental-validation as 5.x-dev",
+        "silverstripe/framework": "dev-pulls/5/toasts-behat as 5.x-dev",
         "silverstripe/recipe-testing": "^3",
         "mikey179/vfsstream": "^1.6.10"
     },
@@ -27,6 +28,19 @@
         "public-files": [
             "assets/*",
             "favicon.ico"
+        ],
+        "project-files-installed": [
+            ".htaccess",
+            "app/.htaccess",
+            "app/_config/mimevalidator.yml",
+            "app/_config/mysite.yml",
+            "app/src/Page.php",
+            "app/src/PageController.php"
+        ],
+        "public-files-installed": [
+            ".htaccess",
+            "index.php",
+            "web.config"
         ]
     },
     "config": {
@@ -62,6 +76,10 @@
         "x4": {
             "type": "vcs",
             "url": "git@github.com:creative-commoners/developer-docs"
+        },
+        "x5": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-framework"
         }
     },
     "conflict": {

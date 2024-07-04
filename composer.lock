@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52693a0d50e41dbf7da755e32bec52e7",
+    "content-hash": "fc8443031eaf184947de40f01facf7d4",
     "packages": [
         {
             "name": "behat/behat",
@@ -5040,16 +5040,16 @@
         },
         {
             "name": "silverstripe/framework",
-            "version": "5.x-dev",
+            "version": "dev-pulls/5/toasts-behat",
             "source": {
                 "type": "git",
-                "url": "https://github.com/silverstripe/silverstripe-framework.git",
-                "reference": "dbc028803847a4b92263532c617c1cd57b55252e"
+                "url": "https://github.com/creative-commoners/silverstripe-framework.git",
+                "reference": "5dc9458defc72a9d3b404ae3f29e6b98dd130f8b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silverstripe/silverstripe-framework/zipball/dbc028803847a4b92263532c617c1cd57b55252e",
-                "reference": "dbc028803847a4b92263532c617c1cd57b55252e",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-framework/zipball/5dc9458defc72a9d3b404ae3f29e6b98dd130f8b",
+                "reference": "5dc9458defc72a9d3b404ae3f29e6b98dd130f8b",
                 "shasum": ""
             },
             "require": {
@@ -5107,7 +5107,6 @@
                 "silverstripe/versioned": "^2",
                 "squizlabs/php_codesniffer": "^3.7"
             },
-            "default-branch": true,
             "bin": [
                 "sake"
             ],
@@ -5119,35 +5118,45 @@
                 ]
             },
             "autoload": {
+                "psr-4": {
+                    "SilverStripe\\Control\\": "src/Control/",
+                    "SilverStripe\\Control\\Tests\\": "tests/php/Control/",
+                    "SilverStripe\\Core\\": "src/Core/",
+                    "SilverStripe\\Core\\Tests\\": "tests/php/Core/",
+                    "SilverStripe\\Dev\\": "src/Dev/",
+                    "SilverStripe\\Dev\\Tests\\": "tests/php/Dev/",
+                    "SilverStripe\\Forms\\": "src/Forms/",
+                    "SilverStripe\\Forms\\Tests\\": "tests/php/Forms/",
+                    "SilverStripe\\i18n\\": "src/i18n/",
+                    "SilverStripe\\i18n\\Tests\\": "tests/php/i18n/",
+                    "SilverStripe\\Logging\\": "src/Logging/",
+                    "SilverStripe\\Logging\\Tests\\": "tests/php/Logging/",
+                    "SilverStripe\\ORM\\": "src/ORM/",
+                    "SilverStripe\\ORM\\Tests\\": "tests/php/ORM/",
+                    "SilverStripe\\Security\\": "src/Security/",
+                    "SilverStripe\\Security\\Tests\\": "tests/php/Security/",
+                    "SilverStripe\\View\\": "src/View/",
+                    "SilverStripe\\View\\Tests\\": "tests/php/View/",
+                    "SilverStripe\\Framework\\Tests\\Behaviour\\": "tests/behat/src/"
+                },
                 "files": [
                     "src/includes/constants.php"
-                ],
-                "psr-4": {
-                    "SilverStripe\\Dev\\": "src/Dev/",
-                    "SilverStripe\\ORM\\": "src/ORM/",
-                    "SilverStripe\\Core\\": "src/Core/",
-                    "SilverStripe\\View\\": "src/View/",
-                    "SilverStripe\\i18n\\": "src/i18n/",
-                    "SilverStripe\\Forms\\": "src/Forms/",
-                    "SilverStripe\\Control\\": "src/Control/",
-                    "SilverStripe\\Logging\\": "src/Logging/",
-                    "SilverStripe\\Security\\": "src/Security/",
-                    "SilverStripe\\Dev\\Tests\\": "tests/php/Dev/",
-                    "SilverStripe\\ORM\\Tests\\": "tests/php/ORM/",
-                    "SilverStripe\\Core\\Tests\\": "tests/php/Core/",
-                    "SilverStripe\\View\\Tests\\": "tests/php/View/",
-                    "SilverStripe\\i18n\\Tests\\": "tests/php/i18n/",
-                    "SilverStripe\\Forms\\Tests\\": "tests/php/Forms/",
-                    "SilverStripe\\Control\\Tests\\": "tests/php/Control/",
-                    "SilverStripe\\Logging\\Tests\\": "tests/php/Logging/",
-                    "SilverStripe\\Security\\Tests\\": "tests/php/Security/",
-                    "SilverStripe\\Framework\\Tests\\Behaviour\\": "tests/behat/src/"
-                }
+                ]
             },
-            "notification-url": "https://packagist.org/downloads/",
             "include-path": [
                 "thirdparty/"
             ],
+            "scripts": {
+                "lint": [
+                    "phpcs src/ tests/php/ tests/behat/src/"
+                ],
+                "lint-clean": [
+                    "phpcbf src/ tests/php/ tests/behat/src/"
+                ],
+                "php-peg": [
+                    "php thirdparty/php-peg/cli.php src/View/SSTemplateParser.peg > src/View/SSTemplateParser.php"
+                ]
+            },
             "license": [
                 "BSD-3-Clause"
             ],
@@ -5168,10 +5177,9 @@
                 "silverstripe"
             ],
             "support": {
-                "issues": "https://github.com/silverstripe/silverstripe-framework/issues",
-                "source": "https://github.com/silverstripe/silverstripe-framework/tree/5"
+                "source": "https://github.com/creative-commoners/silverstripe-framework/tree/pulls/5/toasts-behat"
             },
-            "time": "2024-06-30T22:36:37+00:00"
+            "time": "2024-07-04T23:43:57+00:00"
         },
         {
             "name": "silverstripe/frameworktest",
@@ -8845,6 +8853,12 @@
             "alias_normalized": "5.9999999.9999999.9999999-dev"
         },
         {
+            "package": "silverstripe/framework",
+            "version": "dev-pulls/5/toasts-behat",
+            "alias": "5.x-dev",
+            "alias_normalized": "5.9999999.9999999.9999999-dev"
+        },
+        {
             "package": "silverstripe/frameworktest",
             "version": "dev-pulls/1/elemental-multi",
             "alias": "1.x-dev",
@@ -8862,7 +8876,8 @@
         "silverstripe/behat-extension": 20,
         "silverstripe/admin": 20,
         "dnadesign/silverstripe-elemental": 20,
-        "silverstripe/developer-docs": 20
+        "silverstripe/developer-docs": 20,
+        "silverstripe/framework": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
