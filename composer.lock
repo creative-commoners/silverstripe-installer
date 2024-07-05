@@ -499,12 +499,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/creative-commoners/silverstripe-elemental.git",
-                "reference": "fffa9ba6392b6bc3c55904c10fe9096d4ef3bbc4"
+                "reference": "123be8850445c623a258fe177a3be162ca8a256e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/creative-commoners/silverstripe-elemental/zipball/fffa9ba6392b6bc3c55904c10fe9096d4ef3bbc4",
-                "reference": "fffa9ba6392b6bc3c55904c10fe9096d4ef3bbc4",
+                "url": "https://api.github.com/repos/creative-commoners/silverstripe-elemental/zipball/123be8850445c623a258fe177a3be162ca8a256e",
+                "reference": "123be8850445c623a258fe177a3be162ca8a256e",
                 "shasum": ""
             },
             "require": {
@@ -564,7 +564,7 @@
             "support": {
                 "source": "https://github.com/creative-commoners/silverstripe-elemental/tree/pulls/5/always-inline-submit-elements"
             },
-            "time": "2024-07-04T06:36:36+00:00"
+            "time": "2024-07-04T23:48:49+00:00"
         },
         {
             "name": "doctrine/instantiator",
