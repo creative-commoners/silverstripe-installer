@@ -8,10 +8,27 @@
         "silverstripe/vendor-plugin": "2.x-dev",
         "silverstripe/recipe-cms": "6.x-dev",
         "silverstripe-themes/simple": "3.x-dev",
-        "silverstripe/login-forms": "6.x-dev"
+        "silverstripe/login-forms": "6.x-dev",
+        "silverstripe/framework": "dev-pulls/6/renaming-classes as 6.9999999.9999999.9999999-dev",
+        "silverstripe/testsession": "dev-pulls/4/renaming-classes as 4.9999999.9999999.9999999-dev",
+        "silverstripe/behat-extension": "dev-pulls/6/renaming-classes as 6.9999999.9999999.9999999-dev",
+        "silverstripe/admin": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/assets": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/asset-admin": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/campaign-admin": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/reports": "dev-pulls/6/renaming-classes as 6.9999999.9999999.9999999-dev",
+        "silverstripe/siteconfig": "dev-pulls/6/renaming-classes as 6.9999999.9999999.9999999-dev",
+        "silverstripe/errorpage": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/session-manager": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/versioned": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/versioned-admin": "dev-pulls/3/renaming-classes as 3.9999999.9999999.9999999-dev",
+        "silverstripe/cms": "dev-pulls/6/renaming-classes as 6.9999999.9999999.9999999-dev"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.6"
+        "phpunit/phpunit": "^9.6",
+        "mikey179/vfsstream": "^1.6.10",
+        "silverstripe/recipe-testing": "^4",
+        "silverstripe/frameworktest": "dev-pulls/2/renaming-classes as 2.x-dev"
     },
     "extra": {
         "project-files": [
@@ -33,5 +50,67 @@
         }
     },
     "prefer-stable": true,
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "repositories": {
+        "silverstripe/framework": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-framework.git"
+        },
+        "silverstripe/testsession": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-testsession.git"
+        },
+        "silverstripe/behat-extension": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-behat-extension.git"
+        },
+        "silverstripe/admin": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-admin.git"
+        },
+        "silverstripe/frameworktest": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-frameworktest.git"
+        },
+        "silverstripe/assets": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-assets.git"
+        },
+        "silverstripe/asset-admin": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-asset-admin.git"
+        },
+        "silverstripe/campaign-admin": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-campaign-admin.git"
+        },
+        "silverstripe/reports": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-reports.git"
+        },
+        "silverstripe/siteconfig": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-siteconfig.git"
+        },
+        "silverstripe/errorpage": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-errorpage.git"
+        },
+        "silverstripe/session-manager": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-session-manager.git"
+        },
+        "silverstripe/versioned": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-versioned.git"
+        },
+        "silverstripe/versioned-admin": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-versioned-admin.git"
+        },
+        "silverstripe/cms": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-cms.git"
+        }
+    }
 }
