@@ -12,6 +12,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     uses: silverstripe/gha-ci/.github/workflows/ci.yml@v2
     with:
+      composer_install: true
       # installer contains a sample behat.yml file, though there are no behat tests to run
       endtoend: false
       # require the following in ci.yml rather than composer.json require-dev specifically for installer because unlike

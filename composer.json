@@ -10,10 +10,15 @@
         "silverstripe/recipe-cms": "6.1.x-dev",
         "silverstripe/startup-theme": "1.0.x-dev",
         "silverstripe/login-forms": "6.1.x-dev",
-        "silverstripe/htmleditor-tinymce": "1.0.x-dev"
+        "silverstripe/htmleditor-tinymce": "1.0.x-dev",
+        "silverstripe/framework": "dev-pulls/6.1/gridfield-filter-state as 6.1.9999999.9999999-dev",
+        "silverstripe/admin": "dev-pulls/3.1/filter-behat as 3.1.9999999.9999999-dev"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.3"
+        "phpunit/phpunit": "^11.3",
+        "silverstripe/recipe-testing": "^4",
+        "silverstripe/frameworktest": "^2",
+        "mikey179/vfsstream": "^1.6.10"
     },
     "extra": {
         "project-files": [
@@ -27,6 +32,9 @@
         ]
     },
     "config": {
+        "platform": {
+            "php": "8.3"
+        },
         "process-timeout": 600,
         "allow-plugins": {
             "composer/installers": true,
@@ -35,5 +43,15 @@
         }
     },
     "prefer-stable": true,
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "repositories": {
+        "silverstripe/framework": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-framework.git"
+        },
+        "silverstripe/admin": {
+            "type": "vcs",
+            "url": "git@github.com:creative-commoners/silverstripe-admin.git"
+        }
+    }
 }
